@@ -43,12 +43,12 @@ function ChangePassword() {
             } else {
                 // console.log("4000", res)
                 setLoading(false)
-                toast.error(res?.data?.msg)
+                toast.error(res?.data?.response.data.msg);
             }
         } catch (err) {
             setLoading(false)
             console.log("errr", err)
-            toast.error("Internal server error")
+            toast.error(err?.response.data.msg);
         }
     }
 

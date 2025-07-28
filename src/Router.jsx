@@ -109,6 +109,10 @@ export const Router = createBrowserRouter([
         element: <Register />,
       },
       {
+        path: "/register/:referralCode?",
+        element: <Register />,
+      },
+      {
         path: "/login",
         element: <Login />,
       },

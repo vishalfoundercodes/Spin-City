@@ -47,7 +47,7 @@ function AviatorHeader({
     };
 
     // socket.on("demo_aviator", handleSocket);
-    // socket.on("bigcasino_aviator", handleSocket);
+    // socket.on("bdgcasino_aviator", handleSocket);
     socket.on("rootspinity_aviators", handleSocket);
     return () => socket.off("rootspinity_aviators", handleSocket);
   }, []);
@@ -146,6 +146,28 @@ function AviatorHeader({
   const im = localStorage.getItem("aviatorBg");
   // console.log("im", im);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!audioRefCrash.current) return;
+
+    if (hotAirData?.status === 2) {
+      if (bgMusicStatus) {
+        // ✅ Sound is ON — play crash sound
+        audioRefCrash.current
+          .play()
+          .catch((error) => console.error("Crash sound play error:", error));
+      } else {
+        // ❌ Sound is OFF — don't play crash, make sure it's stopped
+        audioRefCrash.current.pause();
+        audioRefCrash.current.currentTime = 0;
+      }
+    } else {
+      // Reset crash sound when not in crash state
+      audioRefCrash.current.pause();
+      audioRefCrash.current.currentTime = 0;
+    }
+  }, [hotAirData?.status, bgMusicStatus]);
+
   return (
     <>
       <header className="flex items-center bg-blackAviator2 text-blackAviatorText justify-between h-[3.22rem] w-full px-3">

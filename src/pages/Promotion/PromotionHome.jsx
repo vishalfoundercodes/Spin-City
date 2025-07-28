@@ -489,6 +489,7 @@ function PromotionHome() {
       return;
     }
     try {
+      console.log(`peomotion profile: ${apis?.profile}${userId}`);
       const res = await axios.get(`${apis?.profile}${userId}`);
       console.log("profile", res);
       if (res?.data?.success === 200) {
@@ -528,44 +529,51 @@ function PromotionHome() {
       promotionDataHandler();
     }
   }, [userId]);
-  // console.log("object",myDetails?.data?.referral_code_url)
+  console.log("object",myDetails?.data)
   const handleCopyInvitationLink = () => {
     console.log("handleCopyInvitationLink called");
-    if (myDetails?.data?.u_id) {
-      // const baseUrl = "https://admin.gameon.deals/";
-      const baseUrl = "https://webbdgcassio.123ace.in/";
-      // const referralLink = myDetails?.data?.referral_code_url;
-      const referralLink = `${baseUrl}register?referral=${invitationCode}`;
-      console.log("referralLink", referralLink);
+    // if (myDetails?.data?.u_id) {
+    //   // const baseUrl = "https://admin.gameon.deals/";
+    //   const baseUrl = "https://root.myspincity.com/";
+    //   // const referralLink = myDetails?.data?.referral_code_url;
+    //   const referralLink = `${baseUrl}register?referral=${invitationCode}`;
+    //   console.log("referralLink", referralLink);
+            if (myDetails?.data?.u_id) {
+              // const baseUrl = "https://admin.gameon.deals/";
+              // const baseUrl = "https://webbdgcassio.123ace.in/"
+              // const baseUrl = "https://bdgcassino.apponrent.com/";
+              const referralLink = myDetails?.data?.referral_code_url;
+              // const referralLink = `${baseUrl}register?referral=${invitationCode}`;
+              console.log("referralLink", referralLink);
 
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard
-          .writeText(referralLink)
-          .then(() => {
-            setCopyInvitation(true);
-            toast.success("Link copied successfully!");
-          })
-          .catch(() => {
-            toast.error("Failed to copy link.");
-          });
-      } else {
-        // Fallback for unsupported browsers or insecure context
-        const textArea = document.createElement("textarea");
-        textArea.value = referralLink;
-        document.body.appendChild(textArea);
-        textArea.select();
-        try {
-          document.execCommand("copy");
-          setCopyInvitation(true);
-          toast.success("Link copied successfully!");
-        } catch (err) {
-          toast.error("Failed to copy link.");
-        }
-        document.body.removeChild(textArea);
-      }
-    } else {
-      toast.error("UID is not available.");
-    }
+              if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard
+                  .writeText(referralLink)
+                  .then(() => {
+                    setCopyInvitation(true);
+                    toast.success("Link copied successfully!");
+                  })
+                  .catch(() => {
+                    toast.error("Failed to copy link.");
+                  });
+              } else {
+                // Fallback for unsupported browsers or insecure context
+                const textArea = document.createElement("textarea");
+                textArea.value = referralLink;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                  document.execCommand("copy");
+                  setCopyInvitation(true);
+                  toast.success("Link copied successfully!");
+                } catch (err) {
+                  toast.error("Failed to copy link.");
+                }
+                document.body.removeChild(textArea);
+              }
+            } else {
+              toast.error("UID is not available.");
+            }
   };
 
   const handleCopyInvitationCode = () => {
@@ -722,7 +730,7 @@ function PromotionHome() {
         </div>
         <div className="px-5 text-[15px] mt-16 pb-0 bg-[] w-full">
           <button
-            // onClick={() => setCopyInvitation(true)}
+            onClick={() => setCopyInvitation(true)}
             className="w-full font-semibold py-1.5 rounded-full bg-gradient-to-r from-[#EDD188] to-[#C79744] text-[#8F5206]"
           >
             INVITATION LINK
@@ -824,7 +832,7 @@ function PromotionHome() {
               <MdKeyboardArrowRight size={30} />
             </div>
           </Link>
-          <div className="w-full flex items-center justify-between mt-2 bg-customdarkBlue p-4 rounded-md">
+          {/* <div className="w-full flex items-center justify-between mt-2 bg-customdarkBlue p-4 rounded-md">
             <div className="flex items-center gap-2 text-white">
               <img className="w-9 h-9" src={customer} alt="ds" />
               <p>Agent line customer service</p>
@@ -832,7 +840,7 @@ function PromotionHome() {
             <div className="text-xsm text-white">
               <MdKeyboardArrowRight size={30} />
             </div>
-          </div>
+          </div> */}
           <Link
             to="/promotion/rebateratio"
             className="w-full flex items-center justify-between mt-2 bg-customdarkBlue p-4 rounded-md"

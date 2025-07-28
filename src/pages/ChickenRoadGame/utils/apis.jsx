@@ -1,11 +1,11 @@
 // export const baseUrlUsaWin = "https://root.chicken-road.cash";
 // export const baseUrlUsaWin = "https://chicken.jogniyaludo.in";
 // export const baseUrlUsaWin = "https://bigcashino.123ace.in";
-export const baseUrlUsaWin = "https://rootspineity.mobileappdemo.net";
+export const baseUrlUsaWin = "https://root.myspincity.com";
 
 // export const referral_url = "https://root.chicken-road.cash";
 // export const referral_url = "https://chicken.jogniyaludo.in";
-export const referral_url = "https://rootspineity.mobileappdemo.net";
+export const referral_url = "https://root.myspincity.com";
 export const configModalUsaWin = `${baseUrlUsaWin}/api/`;
 export const configModalApk = `${baseUrlUsaWin}/apk/`;
 export const configModalBanner = `${baseUrlUsaWin}/public/api/`;

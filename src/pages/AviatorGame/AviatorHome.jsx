@@ -25,6 +25,7 @@ function AviatorHome() {
   useEffect(() => {
     const handleSocket = (hotair) => {
       const q = JSON.parse(hotair);
+      console.log("hotair data of golden eagle: ",q)
       setHotAirData(q);
     };
 

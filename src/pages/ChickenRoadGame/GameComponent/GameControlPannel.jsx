@@ -126,6 +126,7 @@ const GameControlPanel = ({
       return;
     }
 
+
       // ✅ Get wallet balance before playing
   try {
     const res = await get(`${apis?.profile}?id=${userid}`)
@@ -139,6 +140,14 @@ const GameControlPanel = ({
       toast?.error("Insufficient wallet balance.");
       return;
     }
+     if (amountToPlay < minMaxValues.min) {
+       toast?.error("Minimum bet is ₹" + minMaxValues.min);
+       return;
+     }
+     if (amountToPlay > minMaxValues.max) {
+       toast?.error("Maximum bet is ₹" + minMaxValues.max);
+       return;
+     }
   } catch (err) {
     // console.error("Error fetching balance:", err);
     toast?.error("Could not verify balance. Try again.");
@@ -155,22 +164,22 @@ const GameControlPanel = ({
     setIsProcessingFragment(true);
     setGoButtonCooldown(true); // disable go button for 2 sec
 
-    setTimeout(() => {
-      onPlay();
-      console.log("payload:", payload);
-      console.log(`cash out res: ${apis?.chickenbet}`);
-      post(`${apis?.chickenbet}`, payload)
-        .then((res) => {
-          if (res?.data?.success === true) {
-            console.log("res for payload cash out:",res.data)
-            setProfileRefresher(true);
-            onPlay();
-          }
-        })
-        .catch(console.error);
+      setTimeout(() => {
+        onPlay();
+        console.log("payload:", payload);
+        console.log(`cash out res: ${apis?.chickenbet}`);
+        post(`${apis?.chickenbet}`, payload)
+          .then((res) => {
+            if (res?.data?.success === true) {
+              console.log("res for payload cash out:", res.data);
+              setProfileRefresher(true);
+              onPlay();
+            }
+          })
+          .catch(console.error);
 
-      setGoButtonCooldown(false); // enable go button
-    }, 500);
+        setGoButtonCooldown(false); // enable go button
+      }, 500);
   };
 
   const [minMaxValues, setMinMaxValues] = useState({ min: 1, max: 150 });
@@ -356,7 +365,12 @@ const GameControlPanel = ({
           {gameStarted && (
             <button
               onClick={cashoutHandlerByButton}
-              className="w-full bg-[#EAB308] text-black font-bold text-[20px] px-1 mt-1 md:mt-0 md:py-9 shadow-lg py-3 rounded-2xl text-center cursor-pointer"
+              className={`w-full bg-[#EAB308] text-black font-bold text-[20px] px-1 mt-1 md:mt-0 md:py-9 shadow-lg py-3 rounded-2xl text-center cursor-pointer transition-all duration-300 ${
+                goButtonCooldown || isProcessingFragment
+                  ? "opacity-70 cursor-not-allowed"
+                  : ""
+              }`}
+              disabled={goButtonCooldown || isProcessingFragment}
             >
               CASH OUT <br />
               {currency} {finalValue}
@@ -370,7 +384,7 @@ const GameControlPanel = ({
                   onPlay();
                   setTimeout(() => {
                     setGoButtonCooldown(false);
-                  }, 1000);
+                  }, 2000);
                 }
               }}
               disabled={isProcessingFragment || goButtonCooldown}

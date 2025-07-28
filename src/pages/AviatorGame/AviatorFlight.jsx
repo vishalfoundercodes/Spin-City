@@ -742,6 +742,23 @@ const [flipEagle, setFlipEagle] = useState(false);
     return () => clearTimeout(timer);
   }, [hotAirData?.status]);
 
+  const [isGoldenEagleActive, setIsGoldenEagleActive] = useState(false);
+  useEffect(() => {
+    if (hotAirData?.status === 3) {
+      // ✅ Set in localStorage
+      localStorage.setItem("goldenEagleActive", "true");
+      setIsGoldenEagleActive(true);
+
+      // ✅ Remove after 1 second
+      const timer = setTimeout(() => {
+        localStorage.removeItem("goldenEagleActive");
+        setIsGoldenEagleActive(false);
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [hotAirData?.status]);
+
   return (
     <div
       ref={parentRef}
@@ -919,7 +936,7 @@ const [flipEagle, setFlipEagle] = useState(false);
             {" "}
             <img
               src={standingboy}
-              className="relative -bottom-2 xsm:-left-12 xs:-left-8 -left-14 xsm:w-36 xsm:h-44 z-10 xs:w-34 xs:h-32 w-32 h-20"
+              className="relative -bottom-2 xsm:-left-14 xs:-left-8 -left-10 xsm:w-36 xsm:h-44 z-10 xs:w-34 xs:h-32 w-32 h-20"
               alt="standingboy"
             />
           </>
@@ -953,7 +970,7 @@ const [flipEagle, setFlipEagle] = useState(false);
         {(hotAirData?.status === 1 || hotAirData?.status === 2) && (
           <img
             src={aviator1}
-            className="w-12 h-12 z-20 xsm:w-20 xsm:h-16 -ml-16 xsm:-ml-10 left-20 xsm:left-0 md:w-24 md:h-16 xs:!bottom-5 relative -bottom-2"
+            className="w-12 h-12 z-20 xsm:w-20 xsm:h-16 -ml-16 xsm:-ml-10 left-20 xsm:left-0 md:w-24 md:h-16 xs:!bottom-5 relative -bottom-1"
             alt="aviator"
             style={{
               transform: `translate(${aviatorX}px, ${aviatorY}px)`,
@@ -967,7 +984,7 @@ const [flipEagle, setFlipEagle] = useState(false);
         {hotAirData?.status === 2 && (
           <img
             src={blackEgaleFly}
-            className="w-24 h-20 xsm:w-32 xsm:h-28 -ml-14 xs:-ml-4 xsm:-ml-16 md:w-40 md:h-32 xs:!bottom-5 relative -mt-16 z-40 -bottom-2"
+            className="w-24 h-20 xsm:w-32 xsm:h-28 -ml-4 xs:-ml-4 xsm:-ml-16 md:w-40 md:h-32 xs:!bottom-5 relative -mt-16 z-40 -bottom-2"
             alt="black-eagle"
             style={{
               transform: `translate(${aviatorX}px, ${aviatorY}px) scaleX(${
@@ -977,6 +994,23 @@ const [flipEagle, setFlipEagle] = useState(false);
               position: "absolute",
               pointerEvents: "none",
               transition: "transform 0.05s linear", // match the aviator movement
+            }}
+          />
+        )}
+        {isGoldenEagleActive && (
+          <img
+            src={goldenEagle}
+            alt="golden-eagle"
+            className="w-10 h-10 xsm:w-32 xsm:h-28 -ml-4 xs:-ml-6 xsm:-ml-16 md:w-20 md:h-20 xs:!bottom-8 relative -mt-16 z-40 -bottom-2"
+            style={{
+              transform: `translate(${aviatorX}px, ${aviatorY}px) scaleX(${
+                flipEagle ? -1 : 1
+              })`,
+              transformOrigin: "center",
+              opacity: isResetting ? 0 : 1,
+              position: "absolute",
+              pointerEvents: "none",
+              transition: "transform 0.05s linear",
             }}
           />
         )}

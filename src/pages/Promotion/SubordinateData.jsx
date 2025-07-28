@@ -98,7 +98,7 @@ function SubordinateData() {
       console.log("res1", res);
       if (res?.status === 200) {
         setLoading(false);
-        setSuborinateData(res?.data);
+        setSuborinateData(res?.data.data);
       } else {
         setLoading(false);
         toast.error(res?.data?.message);

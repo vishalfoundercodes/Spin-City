@@ -147,6 +147,8 @@ const apis = {
   titli_result: `${configModalUsaWin}titli_result`,
 
   // general apis
+  feedback: `${configModalUsaWin}feedback`,
+  notification: `${configModalUsaWin}notification/`,
   payin_deposit: `${configModalUsaWin}payzaaar`,
   indianpay: `${configModalUsaWin}indianpay`,
   show_qr: `${configModalUsaWin}show_qr`,

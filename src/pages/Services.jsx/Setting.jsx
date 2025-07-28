@@ -275,7 +275,7 @@ function Setting() {
               <button
                 onClick={changeNameHandler}
                 type="submit"
-                className="mt-5 w-full font-bold py-2 rounded-full border-none bg-gradient-to-b from-customlightbtn to-customdarkBluebtn shadow-lg flex items-center justify-center"
+                className="mt-5 w-full font-bold py-2 rounded-full border-none bg-gradient-to-r from-[#EDD188] to-[#C79744] text-[#8F5206] shadow-lg flex items-center justify-center"
               >
                 Confirm
               </button>

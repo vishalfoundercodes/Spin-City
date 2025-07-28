@@ -13,6 +13,7 @@ function ChangeAvatar() {
   const userId = localStorage.getItem("userId");
   const profileDetails = async () => {
     try {
+      console.log(`api of profile: ${apis.profile}${userId}`);
       const res = await axios.get(`${apis.profile}${userId}`);
       if (res?.data?.success === 200) {
         setMyDetails(res?.data?.data)
@@ -30,6 +31,7 @@ function ChangeAvatar() {
   const AllAvatarHandler = async () => {
     setLoading(true)
     try {
+      console.log(`all avatar:${apis.allAvatar} `)
       const res = await axios.get(`${apis.allAvatar}`)
       if (res?.data?.success === "200") {
         setLoading(false)
@@ -53,6 +55,7 @@ function ChangeAvatar() {
       userimage:image
     }
     try {
+      console.log(`profile update: ${apis.update_profile}`);
       const res = await axios.post(apis.update_profile, payload)
       if (res?.data?.status === 200) {
         setLoading(false)

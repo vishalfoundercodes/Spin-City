@@ -58,8 +58,8 @@ function AllBets({ setTotalBetValue }) {
             setHotAirData(q);
         };
 
-        socket.on("rootspinity_aviators", handleSocket);
-        return () => socket.off("rootspinity_aviators", handleSocket);
+        socket.on("bdgcasino_aviator", handleSocket);
+        return () => socket.off("bdgcasino_aviator", handleSocket);
     }, []);
     // console.log("hotAirData", hotAirData)
 

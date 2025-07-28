@@ -29,6 +29,8 @@ const Wallet = () => {
     //   return;
     // }
     try {
+
+      console.log(`wallet api : ${profileApi}${userId}`);
       const res = await axios.get(`${profileApi}${userId}`);
       if (res?.data?.success === 200) {
         setMyDetails(res?.data)

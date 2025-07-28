@@ -32,6 +32,7 @@ function CustomerServices() {
   const serviceDataHandler = async () => {
     setLoading(true)
     try {
+      console.log(`api of customer service: ${apis.customer_service}`);
       const res = await axios.get(apis.customer_service)
       console.log("resres", res.data);
       if (res?.data?.status === 200) {

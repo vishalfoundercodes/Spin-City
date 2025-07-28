@@ -138,6 +138,16 @@ function Profile() {
             setIsLogout(true);
         }
     };
+const [notificationCount, setNotificationCount] = useState(0);
+        useEffect(() => {
+          axios
+            .get(`${apis.notification}${userId}`)
+            .then((res) => {
+              setNotificationCount(res.data.data.length);
+              console.log("Notification count:", res.data.data.length);
+            })
+            .catch((err) => console.error(err));
+        }, []);
 
     return (
       <>
@@ -330,9 +340,11 @@ function Profile() {
                 &nbsp;Notification
               </div>
               <div className="flex items-center">
-                <div className="bg-[#D23838] text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
-                  7
-                </div>
+                {notificationCount > 0 && (
+                  <div className="bg-[#D23838] text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+                    {notificationCount}
+                  </div>
+                )}
                 <MdKeyboardArrowRight size={25} className="text-white" />
               </div>
             </Link>
@@ -356,7 +368,7 @@ function Profile() {
             </Link>
 
             {/* Game Statistics */}
-            <Link
+            {/* <Link
               to="/gamehistory"
               className="px-2 border-b border-border1 py-4 flex justify-between items-center"
             >
@@ -371,7 +383,7 @@ function Profile() {
               <div className="flex items-end">
                 <MdKeyboardArrowRight size={25} className="text-white" />
               </div>
-            </Link>
+            </Link> */}
 
             {/* Language */}
             <button
