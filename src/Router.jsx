@@ -151,7 +151,7 @@ export const Router = createBrowserRouter([
     ),
     children: [
       {
-        path: "/aviator",
+        path: "/goldeneagle",
         element: <AvitatorLayout />,
       },
       {

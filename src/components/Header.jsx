@@ -95,9 +95,7 @@ function Header({ audioRef, isAudioOn, setIsAudioOn }) {
               {/* <img className="w-6 h-6 mt-2" src={engFlag} alt="sd" /> */}
               {/* Download */}
               <div className="p-2  pl-0">
-                <a
-                // href="www.google.com"
-                >
+                <a href={myDetails?.data?.apk_link} download className="cursor-pointer">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="w-8 h-5 text-[#D9AC4F]"

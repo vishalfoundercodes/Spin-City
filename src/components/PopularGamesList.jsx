@@ -64,7 +64,7 @@ function PopularGamesList() {
       name: "Avaitor",
       bgimage: aviatornew,
       image: aviatornew,
-      route: "/aviator",
+      route: "/goldeneagle",
       description1: "Guess Number",
       description2: "Green/Red/Violet to win",
       bgColor: "bg-gradient-to-l from-[#ff9a8e] to-[#f95959]",

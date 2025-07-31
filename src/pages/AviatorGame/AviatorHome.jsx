@@ -124,13 +124,14 @@ function AviatorHome() {
           </div>
         </div>
         <div
-          className={`w-full ${
-            btn.btn1 && btn.btn2
-              ? "mt-[215px]"
-              : btn.btn1 || btn.btn2
-              ? "mt-[175px]"
-              : "mt-[135px]"
-          } sm:mt-[90px] lg:mt-2 xl:mt-0 order-1 xl:w-[30vw] h-full p-2 rounded-md bg-blackAviator2`}
+          className={`w-full order-1 xl:w-[30vw] h-full p-2 rounded-md bg-blackAviator2
+    ${
+      btn.btn1 && btn.btn2
+        ? "mt-[162px] xs:mt-[102px] sm:mt-[140px] lg:mt-[100px] xl:mt-[60px]"
+        : btn.btn1 || btn.btn2
+        ? "mt-[160px] xs:mt-[103px] sm:mt-[120px] lg:mt-[80px] xl:mt-[40px]"
+        : "mt-[100px] xs:mt-[30px] sm:mt-[90px] lg:mt-[50px] xl:mt-[20px]"
+    }`}
         >
           <AllBetsHome betApiHitted={betApiHitted} />
         </div>

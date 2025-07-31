@@ -43,7 +43,7 @@ function BetButtonTwo({ setBtn, setBetApiHitted }) {
   // normal bet
   const normalBetHandler = async () => {
     const sr =
-      hotAirData?.status === 0 && hotAirData?.betTime < 10
+      hotAirData?.status === 0 && hotAirData?.betTime < 15
         ? hotAirData?.period
         : hotAirData?.period + 1;
     // const sr = hotAirData?.period + 1

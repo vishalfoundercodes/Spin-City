@@ -178,7 +178,7 @@ const Layout = () => {
                 <div className="flex-1 bg-[#9195A3]"></div>
             </div>} */}
 
-        {location?.pathname === "/aviator" ? (
+        {location?.pathname === "/goldeneagle" ? (
           <AvitatorLayout component={<AviatorHome />} />
         ) : location?.pathname === "/chickenRoadGame" ? (
           <ChickenRoadLayout component={<ChickenRoadGame />} />
@@ -215,7 +215,7 @@ const Layout = () => {
                 className={`fixed z-50 ${
                   location?.pathname === "/login" ||
                   location?.pathname === "/register" ||
-                  location?.pathname === "/register/" 
+                  location?.pathname === "/register/"
                     ? "hidden"
                     : "block"
                 }`}

@@ -178,7 +178,7 @@ function Home() {
         bg: goldenEagle,
         icon: goldenEagle,
         label: "Golden Eagle",
-        route: "/aviator",
+        route: "/goldeneagle",
       },
       // { onClick: handleCasinoContainer, key: "casino", bg: slotbg, icon: casinoicon, label: "Casino" },
       {
@@ -403,38 +403,39 @@ function Home() {
           setShowLoginPopup(true);
         }
     }, [])
-    // useEffect(() => {
-    //     const updateWallet = async () => {
 
-    //         const statusJili = localStorage.getItem("jilligamePlayed") || "0";
-    //         const statusSpribe = localStorage.getItem("spribegamePlayed") || "0";
-    //         if (statusJili === "1") {
-    //             await updateUserWalletFromJili();
-    //             localStorage.setItem("jilligamePlayed", "0");
-    //         }
-    //         if (statusSpribe === "1") {
-    //             await updateUserWalletFromSpribe();
-    //             localStorage.setItem("spribegamePlayed", "0");
-    //         }
-    //     };
-    //     updateWallet();
-    //     const handleVisibilityChange = () => {
-    //         if (!document.hidden) {
-    //             updateWallet();
-    //         }
-    //     };
-    //     const handleStorageChange = (event) => {
-    //         if (event.key === "jilligamePlayed" || event.key === "spribegamePlayed") {
-    //             updateWallet();
-    //         }
-    //     };
-    //     document.addEventListener("visibilitychange", handleVisibilityChange);
-    //     window.addEventListener("storage", handleStorageChange);
-    //     return () => {
-    //         document.removeEventListener("visibilitychange", handleVisibilityChange);
-    //         window.removeEventListener("storage", handleStorageChange);
-    //     };
-    // }, []);
+    useEffect(() => {
+        const updateWallet = async () => {
+
+            const statusJili = localStorage.getItem("jilligamePlayed") || "0";
+            const statusSpribe = localStorage.getItem("spribegamePlayed") || "0";
+            if (statusJili === "1") {
+                await updateUserWalletFromJili();
+                localStorage.setItem("jilligamePlayed", "0");
+            }
+            if (statusSpribe === "1") {
+                await updateUserWalletFromSpribe();
+                localStorage.setItem("spribegamePlayed", "0");
+            }
+        };
+        updateWallet();
+        const handleVisibilityChange = () => {
+            if (!document.hidden) {
+                updateWallet();
+            }
+        };
+        const handleStorageChange = (event) => {
+            if (event.key === "jilligamePlayed" || event.key === "spribegamePlayed") {
+                updateWallet();
+            }
+        };
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        window.addEventListener("storage", handleStorageChange);
+        return () => {
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+            window.removeEventListener("storage", handleStorageChange);
+        };
+    }, []);
 
     return (
       <>
@@ -634,7 +635,9 @@ function Home() {
                     </div> */}
 
             {/* Lottery and other games */}
-            <div className=" w-[100%]">{/* <AllGamesContainer /> */}</div>
+            <div className=" w-[100%]">
+              {/* <AllGamesContainer /> */}
+              </div>
           </div>
           {/* winnng info div */}
           <div className="p-3 text-[#D9AC4F] max-w-md mx-auto mt-0">

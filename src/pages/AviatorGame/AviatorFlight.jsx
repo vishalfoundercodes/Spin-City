@@ -324,6 +324,8 @@ import bg_two from '../../assets/usaAsset/aviator/bg_two.png';
 import bg_three from '../../assets/usaAsset/aviator/bg_three.png';
 import bg_four from '../../assets/usaAsset/aviator/bg_four.png';
 import bg_five from '../../assets/usaAsset/aviator/bg_five.png';
+import right_TREE from "../../assets/usaAsset/aviator/right-TREE.png";
+import left_tree from "../../assets/usaAsset/aviator/left-tree.png";
 
 function AviatorFlight({ changeBg, setChangeBg, isSoundOn, setIsSoundOn, isPathRemoved, setIsPathRemoved }) {
   // const audioRef = useRef(null);
@@ -338,9 +340,7 @@ function AviatorFlight({ changeBg, setChangeBg, isSoundOn, setIsSoundOn, isPathR
   const [blackTargetY, setBlackTargetY] = useState(0);
   const aviator1Ref = useRef(null); // kite
   const rightAviatorRef = useRef(null); // black eagle
-const [flipEagle, setFlipEagle] = useState(false);
-
-
+  const [flipEagle, setFlipEagle] = useState(false);
 
   const [isOscillating, setIsOscillating] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
@@ -388,6 +388,12 @@ const [flipEagle, setFlipEagle] = useState(false);
       setIsResetting(true); // Hide aviator before resetting
       setLeftAviatorX(-1000); // ✅ hide left aviator too
       setLeftAviatorY(-1000);
+
+      if (hotAirData?.status === 0) {
+        localStorage.removeItem("kitePosition");
+        localStorage.removeItem("kitePath");
+        localStorage.removeItem("kiteStartTime");
+      }
 
       setTimeout(() => {
         setAviatorX(0);
@@ -490,11 +496,11 @@ const [flipEagle, setFlipEagle] = useState(false);
         let flyY = aviatorY - flyProgress * 1.5 * parentHeight; // Adjust Y movement
         setAviatorX(flyX);
         setAviatorY(flyY);
-        
-            setTimeout(() => {
-              setTrajectoryPoints([]);
-            }, 1000); 
-            
+
+        setTimeout(() => {
+          setTrajectoryPoints([]);
+        }, 1000);
+
         // 🦅 Left aviator matches main aviator during flight for collision
         const COLLISION_DELAY = 500;
         const COLLISION_DURATION = 1000;
@@ -626,57 +632,10 @@ const [flipEagle, setFlipEagle] = useState(false);
     trajectoryPoints.length ? trajectoryPoints.at(-1).x : 0,
     parentRef.current?.clientHeight || 0,
   ];
-  // console.log("changeBg?.image hai", changeBg?.image)
-  // console.log("changeBg?.image hai", changeBg?.image)
-
-  // const logCountRef = useRef(0);
-  // const lastRoundRef = useRef(null);
-
-  // useEffect(() => {
-  //   if (hotAirData?.status === 2) {
-  //     // Detect round change and reset counter
-  //     if (hotAirData?.timer !== lastRoundRef.current) {
-  //       logCountRef.current = 0;
-  //       lastRoundRef.current = hotAirData?.timer;
-  //     }
-
-  //     if (logCountRef.current < 1) {
-  //       console.log(
-  //         🛫 Aviator1 [Round ${hotAirData?.timer}] #${logCountRef.current + 1}:,
-  //         {
-  //           x: aviatorX,
-  //           y: aviatorY,
-  //         }
-  //       );
-  //       logCountRef.current += 1;
-  //     }
-  //   }
-  // }, [hotAirData?.status, aviatorX, aviatorY, hotAirData?.timer]);
 
   const lastCollisionRef = useRef(null);
   const logCountRef = useRef(0);
   const lastRoundRef = useRef(null);
-
-  // useEffect(() => {
-  //   if (hotAirData?.status === 2) {
-  //     // Detect round change and reset counter
-  //     if (hotAirData?.timer !== lastRoundRef.current) {
-  //       logCountRef.current = 0;
-  //       lastRoundRef.current = hotAirData?.timer;
-  //     }
-
-  //     if (logCountRef.current < 3) {
-  //       console.log(
-  //         🛫 Aviator1 [Round ${hotAirData?.timer}] #${logCountRef.current + 1}:,
-  //         {
-  //           x: aviatorX,
-  //           y: aviatorY,
-  //         }
-  //       );
-  //       logCountRef.current += 1;
-  //     }
-  //   }
-  // }, [hotAirData?.status, aviatorX, aviatorY, hotAirData?.timer]);
 
   useEffect(() => {
     if (hotAirData?.status === 2) {
@@ -722,14 +681,6 @@ const [flipEagle, setFlipEagle] = useState(false);
     ? parentRef.current.clientHeight - 200
     : 120;
 
-  // useEffect(() => {
-  //   if (hotAirData?.status === 2) {
-  //     status2StartTimeRef.current = performance.now();
-  //     setBlackTargetX(aviatorX); // freeze kite X
-  //     setBlackTargetY(aviatorY); // freeze kite Y
-  //   }
-  // }, [hotAirData?.status]);
-
   useEffect(() => {
     let timer;
     if (hotAirData?.status === 2) {
@@ -759,6 +710,69 @@ const [flipEagle, setFlipEagle] = useState(false);
     }
   }, [hotAirData?.status]);
 
+  const [isPreFlip, setIsPreFlip] = useState(false);
+  const [isFlipped, setIsFlipped] = useState(false);
+  const [finalY, setFinalY] = useState(aviatorY); // store final upward position
+
+  useEffect(() => {
+    if (flipEagle) {
+      // ✅ Step 1: Move upward slightly
+      setIsPreFlip(true);
+      setIsFlipped(false);
+
+      // ✅ Step 2: After 150ms, keep the upward position and flip
+      const timer = setTimeout(() => {
+        setFinalY(aviatorY - 20); // final Y stays upward
+        setIsPreFlip(false);
+        setIsFlipped(true);
+      }, 150);
+
+      return () => clearTimeout(timer);
+    } else {
+      // reset if no flip
+      setIsFlipped(false);
+      setFinalY(aviatorY);
+    }
+  }, [flipEagle, aviatorY]);
+
+  // ✅ During pre-flip, apply temporary upward movement
+  const translateY = isPreFlip ? aviatorY - 20 : finalY;
+  const scaleX = isFlipped ? -1 : 1;
+
+  // Save kite state every time it moves (only during status 1)
+  useEffect(() => {
+    if (hotAirData?.status === 1) {
+      localStorage.setItem(
+        "kitePosition",
+        JSON.stringify({ x: aviatorX, y: aviatorY })
+      );
+      localStorage.setItem("kitePath", JSON.stringify(trajectoryPoints));
+    }
+  }, [aviatorX, aviatorY, trajectoryPoints, hotAirData?.status]);
+
+  useEffect(() => {
+    if (hotAirData?.status === 1) {
+      const savedPos = JSON.parse(localStorage.getItem("kitePosition") || "{}");
+      const savedPath = JSON.parse(localStorage.getItem("kitePath") || "[]");
+      const savedStartTime = localStorage.getItem("kiteStartTime");
+
+      if (savedPos?.x !== undefined) {
+        setAviatorX(savedPos.x);
+        setAviatorY(savedPos.y);
+      }
+
+      if (savedPath.length > 0) {
+        setTrajectoryPoints(savedPath);
+      }
+
+      if (savedStartTime) {
+        const elapsed = Date.now() - parseInt(savedStartTime);
+        // ✅ Adjust animation startTime so animation continues seamlessly
+        status2StartTimeRef.current = performance.now() - elapsed;
+      }
+    }
+  }, [hotAirData?.status]);
+
   return (
     <div
       ref={parentRef}
@@ -770,39 +784,45 @@ const [flipEagle, setFlipEagle] = useState(false);
   alt="Top Left Aviator"
   className="absolute top-2 left-2 w-12 h-12 sm:w-20 sm:h-20 z-50"
 /> */}
-      <img
-        src={goldenEagle}
-        alt="Left Aviator"
-        className="absolute top-12 left-22 w-12 h-12 sm:w-20 sm:h-20 z-50  transition-transform duration-300"
-        // style={{
-        //   transform: `translate(${leftAviatorX}px, ${leftAviatorY}px)`,
-        // }}
-        // style={{
-        //   transform:
-        //     hotAirData?.status === 2
-        //       ? `translate(${leftAviatorX + aviatorOffsetX}px, ${
-        //           leftAviatorY + aviatorOffsetY
-        //         }px)`
-        //       : `translate(0px, 0px)`, // ✅ top-left by default
-        // }}
-      />
+
+      {/* ✅ Left Branch Always Visible */}
+      <div className="absolute top-12 left-22 z-50">
+        <div className="relative w-28 sm:w-40">
+          {/* Branch as the base (always visible) */}
+          <img src={left_tree} alt="Branch" className="w-14 sm:w-20 h-auto" />
+
+          {/* ✅ Golden Eagle appears only when condition is true */}
+          {!isGoldenEagleActive && (
+            <img
+              src={goldenEagle}
+              alt="Golden Eagle"
+              className="absolute w-14 h-14 sm:w-24 sm:h-24 left-4 sm:left-10 transform -translate-x-1/2 -top-3 sm:-top-8"
+            />
+          )}
+        </div>
+      </div>
+
       {/* Top-right aviator */}
-      {hotAirData?.status != 2 && (
-        <img
-          src={blackEgale}
-          alt="Top Right Aviator"
-          // className="absolute top-2 right-2 w-12 h-12 sm:w-20 sm:h-20 z-50"
-          className="absolute top-8 right-2 w-12 h-12 sm:w-20 sm:h-20 z-50 transition-transform duration-300"
-          // style={{
-          //   transform:
-          //     hotAirData?.status === 2
-          //       ? `translate(${rightAviatorX - rightAviatorOffsetX}px, ${
-          //           rightAviatorY + rightAviatorOffsetY
-          //         }px)`
-          //       : `translate(0px, 0px)`,
-          // }}
-        />
-      )}
+      {/* ✅ Right Branch Always Visible */}
+      <div className="absolute top-14 right-0 z-50">
+        <div className="relative w-28 sm:w-40">
+          {/* Branch as the base */}
+          <img
+            src={right_TREE}
+            alt="Right Branch"
+            className="w-14 sm:w-28 h-auto ml-auto"
+          />
+
+          {/* ✅ Black Eagle only shows when status != 2 */}
+          {hotAirData?.status != 2 && (
+            <img
+              src={blackEgale}
+              alt="Black Eagle"
+              className="absolute w-14 h-14 sm:w-24 sm:h-24 right-8 sm:right-12 transform translate-x-1/2 -top-6 sm:-top-8"
+            />
+          )}
+        </div>
+      </div>
 
       {isModalOpen && (
         <div
@@ -847,11 +867,11 @@ const [flipEagle, setFlipEagle] = useState(false);
       }
       -mt-12 text-center font-bold text-[1.5rem] sm:text-[3rem] w-full whitespace-nowrap`}
               >
-                Waiting for next round
+                Waiting for next round 
               </p>
 
-              <div className="mt-2 w-80 sm:w-100">
-                <ProgressBarIndicator timer={100} />
+              <div className="mt-2 w-80 sm:w-200">
+                <ProgressBarIndicator timer={150} />
               </div>
             </div>
           )}
@@ -862,7 +882,7 @@ const [flipEagle, setFlipEagle] = useState(false);
         width={parentRef.current?.clientWidth || 800}
         height={parentRef.current?.clientHeight || 600}
         // className="absolute bottom-4 xsm:bottom-8 left-4 xsm:left-8 z-40"
-        className="absolute bottom-[40px] xs:bottom-[58px] xsm:bottom-[92px] left-12 xsm:left-14 z-50 "
+        className="absolute bottom-[40px] xs:bottom-[58px] xsm:bottom-[92px] left-8 xs:left-4 xsm:left-14 z-50 "
       >
         <Layer>
           {!isPathRemoved && (
@@ -920,14 +940,14 @@ const [flipEagle, setFlipEagle] = useState(false);
           <img
             src={flyBoy}
             // className="relative -bottom-2 -left-10 w-40 h-44 z-40"
-            className="relative -bottom-2 -left-10 xsm:-left-14 xsm:w-36 xsm:h-44 z-10 xs:w-32 xs:h-32 w-32 h-20"
+            className="relative -bottom-2 -left-6 xs:-left-8 xsm:-left-14 xsm:w-36 xsm:h-44 z-10 xs:w-24 xs:h-32 w-16 h-20"
             alt="flyboy"
           />
         ) : hotAirData?.status === 2 ? (
           <img
             src={flyBoy}
             // className="relative -!bottom-2 -left-10 w-40 h-44 z-10"
-            className="relative -bottom-2 -left-10 xsm:-left-14 xsm:w-36 xsm:h-44 z-10 xs:w-34 xs:h-32 w-32 h-20"
+            className="relative -bottom-2 -left-6 xsm:-left-14 xsm:w-36 xsm:h-44 z-10 xs:w-34 xs:h-32 w-16 h-20"
             alt="standingboy"
           />
         ) : null}
@@ -936,7 +956,7 @@ const [flipEagle, setFlipEagle] = useState(false);
             {" "}
             <img
               src={standingboy}
-              className="relative -bottom-2 xsm:-left-14 xs:-left-8 -left-10 xsm:w-36 xsm:h-44 z-10 xs:w-34 xs:h-32 w-32 h-20"
+              className="relative -bottom-2 xsm:-left-14 xs:-left-6 -left-6 xsm:w-36 xsm:h-44 z-10 xs:w-34 xs:h-32 w-16 h-20"
               alt="standingboy"
             />
           </>
@@ -970,7 +990,7 @@ const [flipEagle, setFlipEagle] = useState(false);
         {(hotAirData?.status === 1 || hotAirData?.status === 2) && (
           <img
             src={aviator1}
-            className="w-12 h-12 z-20 xsm:w-20 xsm:h-16 -ml-16 xsm:-ml-10 left-20 xsm:left-0 md:w-24 md:h-16 xs:!bottom-5 relative -bottom-1"
+            className="w-12 h-12 z-20 xsm:w-20 xsm:h-16 -ml-16 xsm:-ml-10 left-16 xs:left-10 xsm:left-0 md:w-24 md:h-16 xs:!bottom-5 relative -bottom-1"
             alt="aviator"
             style={{
               transform: `translate(${aviatorX}px, ${aviatorY}px)`,
@@ -984,7 +1004,7 @@ const [flipEagle, setFlipEagle] = useState(false);
         {hotAirData?.status === 2 && (
           <img
             src={blackEgaleFly}
-            className="w-24 h-20 xsm:w-32 xsm:h-28 -ml-4 xs:-ml-4 xsm:-ml-16 md:w-40 md:h-32 xs:!bottom-5 relative -mt-16 z-40 -bottom-2"
+            className="w-24 h-20 xsm:w-32 xsm:h-28 -ml-2 xs:-ml-10 xsm:-ml-16 md:w-40 md:h-32 xs:!bottom-5 relative -mt-16 z-40 -bottom-2"
             alt="black-eagle"
             style={{
               transform: `translate(${aviatorX}px, ${aviatorY}px) scaleX(${
@@ -1001,16 +1021,14 @@ const [flipEagle, setFlipEagle] = useState(false);
           <img
             src={goldenEagle}
             alt="golden-eagle"
-            className="w-10 h-10 xsm:w-32 xsm:h-28 -ml-4 xs:-ml-6 xsm:-ml-16 md:w-20 md:h-20 xs:!bottom-8 relative -mt-16 z-40 -bottom-2"
+            className="w-10 h-10 xsm:w-32 xsm:h-28 -ml-4 xs:-ml-6 xsm:-ml-10 md:w-20 md:h-20 xs:!bottom-8 relative -mt-16 z-40 -bottom-2"
             style={{
-              transform: `translate(${aviatorX}px, ${aviatorY}px) scaleX(${
-                flipEagle ? -1 : 1
-              })`,
+              transform: `translate(${aviatorX}px, ${translateY}px) scaleX(${scaleX})`,
               transformOrigin: "center",
               opacity: isResetting ? 0 : 1,
               position: "absolute",
               pointerEvents: "none",
-              transition: "transform 0.05s linear",
+              transition: "transform 0.15s ease-in-out", // smooth upward + flip
             }}
           />
         )}
@@ -1035,7 +1053,7 @@ const [flipEagle, setFlipEagle] = useState(false);
       ) : (
         <img
           className="w-full object-fill bg-center h-[100%]"
-          src={bg_two} // ✅ default to bg_two when not 1–5
+          src={bg_one} // ✅ default to bg_two when not 1–5
           alt="background"
         />
       )}
