@@ -55,20 +55,20 @@ const GameRulesModal = ({ onClose }) => {
               {minBet}
             </span>
           </div>
-          <div className="flex justify-between items-center bg-[#4E5163] px-4 py-1.5 rounded-lg">
+          {/* <div className="flex justify-between items-center bg-[#4E5163] px-4 py-1.5 rounded-lg">
             <span className="text-[15px] text-white">Max bet:</span>
             <span className="text-[15px] font-semibold text-white">
               {currency}
               {maxBet}
             </span>
-          </div>
-          <div className="flex justify-between items-center bg-[#4E5163] px-4 py-1.5 rounded-lg">
+          </div> */}
+          {/* <div className="flex justify-between items-center bg-[#4E5163] px-4 py-1.5 rounded-lg">
             <span className="text-[15px] text-white">Min win:</span>
             <span className="text-[15px] font-semibold text-white">
               {currency}
               {minWin}
             </span>
-          </div>
+          </div> */}
           <div className="flex justify-between items-center bg-[#4E5163] px-4 py-1.5 rounded-lg">
             <span className="text-[15px] text-white">Max win:</span>
             <span className="text-[15px] font-semibold text-white">

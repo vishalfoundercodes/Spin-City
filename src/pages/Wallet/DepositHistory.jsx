@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import usdt_icon from "../../assets/images/usdt_icon.png";
 // import razorpay_icon from '../../assets/razorpay2.png'
 import payzaar from "../../assets/payzaar.png";
+import indianpaylogo from "../../assets/images/indianpaylogo.png";
 import bank_card from "../../assets/usaAsset/wallet/bank_card.png"
 import camlenios from "../../assets/usaAsset/wallet/camlenios.png"
 import indianpay from "../../assets/usaAsset/wallet/indianpay.png"
@@ -150,23 +151,29 @@ function DepositHistory() {
     }, [isOrderidCopied, setIsOrderidCopied]);
 
   
-      const payMethod = [{
-          image: payzaar,
-          name: "payzaar ",
-          type: 0
-      },
-      {
-          image: usdt_icon,
-          name: "usdt_icon",
-          type: 1
-      },
-  
-    //   {
-    //       image: camlenios,
-    //       name: "",
-    //       type: 2
-    //   }
-      ]
+      const payMethod = [
+        //   {
+        //     image: payzaar,
+        //     name: "payzaar ",
+        //     type: 0
+        // },
+        {
+          image: indianpaylogo,
+          name: "Indian Pay",
+          type: 0,
+        },
+        // {
+        //     image: usdt_icon,
+        //     name: "usdt_icon",
+        //     type: 1
+        // },
+
+        //   {
+        //       image: camlenios,
+        //       name: "",
+        //       type: 2
+        //   }
+      ];
     return (
       <>
         <div className="w-full">
@@ -273,16 +280,16 @@ function DepositHistory() {
                     <div className="flex mt-3 text-white justify-between items-center">
                       <p className="text-xsm font-bold">Balance</p>
                       <p className="text-xsm font-semibold text-[#D9AC4F]">
-                        ₹{item?.cash}.00
+                        ₹{item?.cash}
                       </p>
                     </div>
                     <div className="flex mt-4 text-white opacity-55 justify-between items-center">
                       <p className="text-xsm font-bold">Type</p>
                       <p className="text-xsm text-white font-semibold">
                         {item?.type == 0
-                          ? "usdt"
+                          ? "Indian Pay"
                           : item?.type == 1
-                          ? "UPI Payment"
+                          ? "USDT"
                           : ""}
                       </p>
                     </div>

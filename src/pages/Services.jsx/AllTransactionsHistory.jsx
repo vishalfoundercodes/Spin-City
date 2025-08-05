@@ -196,7 +196,7 @@ function AllTransactionsHistory() {
                     <span className="text-[#A8A5A1]">Balance</span>
                     <span
                       className={`font-semibold text-[12px] ${
-                        i % 2 === 0 ? "text-[#EF4444]" : "text-[#22C55E]"
+                        i % 2 === 0 ? "text-[#A8A19D]" : "text-[#A8A19D]"
                       }`}
                     >
                       ₹{parseFloat(item?.amount).toFixed(2)}

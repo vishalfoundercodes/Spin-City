@@ -191,7 +191,7 @@ function Deposit() {
     if (userId) {
       profileDetails(userId);
     }
-    getQR();
+    // getQR();
   }, [userId]);
 
   const handleSelectAmount = (amount) => {

@@ -17,6 +17,7 @@ import email_tab from "../assets/usaAsset/email_tab.png";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { useParams } from "react-router-dom";
+import { FiKey } from "react-icons/fi"; 
 
 const register = apis?.register;
 
@@ -30,6 +31,9 @@ function Register() {
   const [checkAgreement, setCheckAgreement] = useState(false);
   const [passwordVisible, setPasswordVisible] = useState(false);
   const { referralCode: referralCodeFromPath } = useParams();
+  const [otpVisible, setotpVisible] = useState(false)
+  const [buttonDisable, setbuttonDisable] = useState(true)
+  const [otp, setOtp] = useState("");
   const codeFromQuery = searchParams.get("referral");
 
   const code = codeFromQuery || referralCodeFromPath;
@@ -137,6 +141,8 @@ function Register() {
     formik.setFieldValue("country_code", selectedCountryCode);
   }, [searchParams, selectedCountryCode]);
 
+
+
   const countryCodeHandler = async () => {
     try {
       const res = await axios.post(apis.country);
@@ -159,6 +165,49 @@ function Register() {
   const naivatorhandle = () => {
     localStorage.setItem("abousType", "6");
   };
+
+  // otp
+   const [otpSentTo, setOtpSentTo] = useState(""); // store number where OTP was sent
+
+   const sendOtp = async (number) => {
+     try {
+       // ✅ Call your OTP API here
+       console.log(`${apis.sendOtp}${number}`);
+         const res = await axios.post(
+           `${apis.sendOtp}${number}`
+         );
+         console.log("send otp")
+          console.log("sent otp response:", res.data);
+         if (res?.data?.error == 200) {
+          setotpVisible(true);
+           toast.success("OTP sent to " + number);
+         }
+        
+       setOtpSentTo(number); // ✅ remember this number to prevent multiple OTPs
+     } catch (error) {
+       console.error("Failed to send OTP", error);
+     }
+   }; 
+
+ const verifyOtp = async () => {
+   try {
+    console.log(`${apis.verifyOtp}?mobile=${formik.values.mobile}&otp=${otp}`);
+     const res = await axios.post(
+       `${apis.verifyOtp}${formik.values.mobile}&otp=${otp}`
+     );
+console.log("res of verify otp:",res)
+     if (res?.data?.error == 200) {
+       toast.success(res?.data?.msg || "OTP Verified Successfully");
+       setbuttonDisable(false)
+     } else {
+       toast.error(res?.data?.msg || "OTP verification failed")
+     }
+   } catch (error) {
+     toast.error("Invalid OTP or verification failed");
+   }
+ };
+
+
   return (
     <>
       {loading && <Loader setLoading={setLoading} loading={loading} />}
@@ -238,10 +287,16 @@ function Register() {
                     placeholder="Enter your phone number"
                     className="col-span-[60%] bg-customdarkBlue  text-[14px] focus:border-[1px] border-customlightBlue rounded-md outline-none w-full pl-3 p-3 placeholder:text-gray text-white"
                     onInput={(e) => {
-                      e.target.value = e.target.value
+                      const value = e.target.value
                         .replace(/[^0-9]/g, "")
                         .slice(0, 10);
+                      e.target.value = value;
                       formik.setFieldValue("mobile", e.target.value);
+
+                      if (value.length === 10 && otpSentTo !== value) {
+                        console.log("sent otp");
+                        sendOtp(value);
+                      }
                     }}
                   />
                 </div>
@@ -251,6 +306,39 @@ function Register() {
                   </div>
                 )}
               </div>
+
+            { otpVisible && (<div className="mt-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <FiKey className="text-yellow" size={18} />
+                  <label className="text-sm text-white font-medium">
+                    Enter OTP
+                  </label>
+                </div>
+
+                {/* OTP Input + Verify Button in Row */}
+                <div className="flex gap-2 mt-2">
+                  <input
+                    type="text"
+                    value={otp}
+                    onChange={(e) =>
+                      setOtp(e.target.value.replace(/[^0-9]/g, "").slice(0, 6))
+                    }
+                    placeholder="Enter OTP"
+                    className="flex-1 bg-customdarkBlue text-white rounded-md p-3 text-[14px] outline-none focus:border border-customlightBlue"
+                  />
+                  <button
+                    onClick={verifyOtp} // ✅ enable only when otp.length === 6
+                    disabled={otp.length !== 6}
+                    className={`font-medium px-4 rounded-md transition ${
+                      otp.length === 6
+                        ? "text-[#8F5206] bg-gradient-to-r from-[#EDD188] to-[#CA9D4B] hover:bg-red-600 cursor-pointer"
+                        : "bg-gray text-gray-300  cursor-not-allowed"
+                    }`}
+                  >
+                    Verify
+                  </button>
+                </div>
+              </div>)}
 
               <div className="">
                 <div className="flex items-center gap-2 py-2">
@@ -270,6 +358,7 @@ function Register() {
                   type="email"
                   name="email"
                   id="email"
+                  disabled={buttonDisable}
                   placeholder="Please enter the Email"
                   className="bg-customdarkBlue mt-2 border-[1px] border-transparent focus:border-customlightBlue text-[14px] rounded-md outline-none w-full pl-3 p-3 placeholder:text-gray text-white transition-all duration-200 ease-in-out"
                   onKeyDown={(e) => {
@@ -308,6 +397,7 @@ function Register() {
                   name="password"
                   id="password"
                   placeholder="Password"
+                  disabled={buttonDisable}
                   className="bg-customdarkBlue mt-2 border-[1px] border-transparent focus:border-customlightBlue text-[14px] rounded-md outline-none w-full pl-3 p-3 placeholder:text-gray text-white transition-all duration-200 ease-in-out"
                   minLength={8}
                   maxLength={20}
@@ -384,6 +474,7 @@ function Register() {
                   type={passwordVisible ? "text" : "password"}
                   name="password_confirmation"
                   id="password_confirmation"
+                  disabled={buttonDisable}
                   placeholder="Confirm Password"
                   className="bg-customdarkBlue mt-2 border-[1px] border-transparent focus:border-customlightBlue text-[14px] rounded-md outline-none w-full pl-3 p-3 placeholder:text-gray text-white transition-all duration-200 ease-in-out"
                   minLength={8}

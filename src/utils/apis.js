@@ -9,14 +9,17 @@ export const baseUrlUsaWin = "https://root.myspincity.com";
 export const configModalUsaWin = `${baseUrlUsaWin}/api/`
 
 const apis = {
-  sendOtp: "https://otp.fctechteam.org/send_otp.php?mode=live&digit=4&mobile=",
-  verifyOtp: "https://otp.fctechteam.org/verifyotp.php",
+  // https://otp.fctechteam.org/verifyotp.php?mode=test&digit=4&mobile=$mobile&otp=$otp
+  sendOtp: "https://otp.fctechteam.org/send_otp.php?mode=live&digit=6&mobile=",
+  verifyOtp:
+    "https://otp.fctechteam.org/verifyotp.php?mode=live&digit=6&mobile=",
   createUserId: `${configModalUsaWin}otp-register`,
   register: `${configModalUsaWin}register`,
   login: `${configModalUsaWin}login`,
   profile: `${configModalUsaWin}profile?id=`,
   changePassword: `${configModalUsaWin}changePassword`,
   fundTransfer: `${configModalUsaWin}main_wallet_transfers`,
+  forget_password: `${configModalUsaWin}forget_reset_password`,
 
   //spin to wheel game urls
   spin_bet: `${configModalUsaWin}spin/bet`,
@@ -147,6 +150,8 @@ const apis = {
   titli_result: `${configModalUsaWin}titli_result`,
 
   // general apis
+  // https://root.myspincity.com/api/sponsored-links
+  sponsored_links: `${configModalUsaWin}sponsored-links`,
   feedback: `${configModalUsaWin}feedback`,
   notification: `${configModalUsaWin}notification/`,
   payin_deposit: `${configModalUsaWin}payzaaar`,

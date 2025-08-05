@@ -94,36 +94,45 @@
 
 import React, { useEffect, useState } from "react";
 import { MdClose } from "react-icons/md";
-import sponserImage from "../../assets/Sponser/sponser option 1.jpg";
-import sponserImage2 from "../../assets/Sponser/sponser option 2.png";
-import {useNavigate} from "react-router-dom";
-
-const sponsorImages = [
-  {
-    id: 1,
-    image: sponserImage,
-    // link: "https://shivrambook.online/",
-  },
-  {
-    id: 2,
-    image: sponserImage2,
-    link: "https://shivrambook.online/",
-  },
-];
+import axios from "axios";
+import apis from "../../utils/apis";
 
 const SponsorSlider = () => {
   const [current, setCurrent] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
-  const navigate = useNavigate();
+  const [sponsorImages, setSponsorImages] = useState([]);
 
+  // ✅ Fetch sponsor data from API
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await axios.get(apis.sponsored_links);
+        console.log("Sponsor data:", res.data);
+
+        const mappedSponsors = (res.data?.data || []).map((item) => ({
+          id: item.id,
+          image: item.image_url,
+          link: item.redirect_url || null,
+        }));
+
+        setSponsorImages(mappedSponsors);
+      } catch (error) {
+        console.error("Error fetching sponsor images:", error);
+      }
+    };
+    fetchData();
+  }, []);
+
+ 
+  useEffect(() => {
+    if (sponsorImages.length === 0) return;
     const interval = setInterval(() => {
       setCurrent((prev) => (prev + 1) % sponsorImages.length);
     }, 3000);
     return () => clearInterval(interval);
-  }, []);
+  }, [sponsorImages]);
 
-  if (!isVisible) return null;
+  if (!isVisible || sponsorImages.length === 0) return null;
 
   return (
     <div className="bg-[#242424] bg-opacity-90 flex items-center justify-center mb-0">
@@ -132,6 +141,7 @@ const SponsorSlider = () => {
           Sponsored
         </span>
 
+        {/* Close button */}
         <button
           onClick={() => setIsVisible(false)}
           className="absolute top-[-5px] right-[-0.3rem] z-20 bg-black bg-opacity-60 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold"
@@ -139,9 +149,9 @@ const SponsorSlider = () => {
           <MdClose />
         </button>
 
-        {/* Only one image at a time, faded in/out */}
+        {/* ✅ Clickable image with link from API */}
         <a
-          // href={sponsorImages[current].link}
+          href={sponsorImages[current].link}
           target="_blank"
           rel="noopener noreferrer"
           className="w-full h-full flex justify-center items-center"
@@ -149,11 +159,6 @@ const SponsorSlider = () => {
           <img
             key={sponsorImages[current].id}
             src={sponsorImages[current].image}
-            onClick={() => {
-              if (sponsorImages[current].link) {
-                window.open(sponsorImages[current].link, "_blank");
-              }
-            }}
             alt={`Sponsor ${current}`}
             className="w-[95%] h-[95%] object-fill cursor-pointer transition-opacity duration-700 opacity-100"
           />
@@ -164,6 +169,7 @@ const SponsorSlider = () => {
 };
 
 export default SponsorSlider;
+
 
 
 

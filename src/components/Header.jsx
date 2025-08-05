@@ -22,11 +22,23 @@ import { toast } from "react-toastify";
 import axios from "axios";
 import apis from "../utils/apis";
 import LanguageSelector from "./CountryLogoIcon";
+import Alert from "@mui/material/Alert";
+import CheckIcon from "@mui/icons-material/Check";
+
 const profileApi = apis.profile;
 function Header({ audioRef, isAudioOn, setIsAudioOn }) {
   const location = useLocation();
   const [myDetails, setMyDetails] = useState(null);
   const navigate = useNavigate();
+    const [showAlert, setShowAlert] = useState(false);
+
+    const handleDownload = () => {
+      // ✅ Show alert
+      setShowAlert(true);
+
+      // ✅ Hide alert automatically after 3 seconds
+      setTimeout(() => setShowAlert(false), 3000);
+    };
 
   const userId = localStorage.getItem("userId");
   const toggleAudio = () => {
@@ -95,7 +107,20 @@ function Header({ audioRef, isAudioOn, setIsAudioOn }) {
               {/* <img className="w-6 h-6 mt-2" src={engFlag} alt="sd" /> */}
               {/* Download */}
               <div className="p-2  pl-0">
-                <a href={myDetails?.data?.apk_link} download className="cursor-pointer">
+                {showAlert && (
+                  <Alert
+                    icon={<CheckIcon fontSize="inherit" />}
+                    severity="success"
+                  >
+                    Your download has started...
+                  </Alert>
+                )}
+                <a
+                  href={myDetails?.data?.apk_link}
+                  download
+                  className="cursor-pointer"
+                  onClick={handleDownload}
+                >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="w-8 h-5 text-[#D9AC4F]"

@@ -86,14 +86,14 @@ function CustomerServices() {
         ))}
       </div> */}
       <div className="text-xsm px-5">
-        {serviceData?.slice(0, 1).map((item, i) => (
+        {serviceData?.slice(0, 6).map((item, i) => (
           <button
             onClick={() => handlerNavigator(item?.link)}
             key={i}
             className="py-2 rounded-lg w-full flex items-center justify-between gap-2 text-white bg-redLight mt-5 border-b-[1px] pb-2 border-gray"
           >
             <div className="flex items-center gap-2">
-              <div className="rounded-full w-10 h-10 text-white p-1 flex items-center justify-center bg-[#FB4E4E]">
+              <div className="rounded-full w-10 h-10 text-white p-1 flex items-center justify-center bg-[#D9AC4F]">
                 <img src={item?.Image} alt="icon" />
               </div>
               <p>{item?.name}</p>

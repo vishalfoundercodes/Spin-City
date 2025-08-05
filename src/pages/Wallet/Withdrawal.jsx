@@ -16,7 +16,7 @@ import payzaar from "../../assets/payzaar.png";
 import BankDetailsCard from './Bankdetails';
 import UsdtBankDetail from './UsdtBankDetail';
 import { MdKeyboardArrowRight, MdKeyboardArrowDown } from "react-icons/md";
-
+import indianpaylogo from "../../assets/images/indianpaylogo.png";
 
 
 function Withdrawal() {
@@ -201,7 +201,7 @@ function Withdrawal() {
              console.log("response fghj",res )
             if (res?.data?.status === 200||res?.data?.status === true||res?.data?.status === '200'||res?.data?.success === true) {
                 setloading(false)
-                profileDetails()
+                profileDetails(userId);
                 toast.success(res?.data?.message)
                 setUpiAmountCamlenio("")
                 setUsdtAmount("")
@@ -218,23 +218,23 @@ function Withdrawal() {
         }
     }
     // console.log("cricket match",myDetails)
-  const payMethod = [{
-           image: payzaar,
-           name: "payzaar",
-           type: 0
-       },
-      //  {
-      //      image: usdt_icon,
-      //      name: "USDT",
-      //      type: 1
-      //  },
-    //    {
-    //        image: indianpay,
-    //        name: "UPI Payment",
-    //        type: 1
+  const payMethod = [
+    // {
+    //        image: payzaar,
+    //        name: "payzaar",
+    //        type: 0
     //    },
-   
-       ]
+    //  {
+    //      image: usdt_icon,
+    //      name: "USDT",
+    //      type: 1
+    //  },
+    {
+      image: indianpaylogo,
+      name: "Indian Pay",
+      type: 0,
+    },
+  ];
     return (
       <div className="px-3 h-full ">
         {loading == true && (
