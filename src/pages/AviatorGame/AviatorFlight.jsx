@@ -66,6 +66,12 @@ function AviatorFlight({
   const [dots, setDots] = useState([]);
   let oscillationStartY = 0;
   const [hotAirData, setHotAirData] = useState(null);
+
+  // ✅ NEW: Golden Eagle Flying State
+  const [isGoldenEagleFlying, setIsGoldenEagleFlying] = useState(false);
+  const [goldenEagleX, setGoldenEagleX] = useState(0);
+  const [goldenEagleY, setGoldenEagleY] = useState(0);
+
   useEffect(() => {
     const handleSocket = (hotair) => {
       const q = JSON.parse(hotair);
@@ -90,6 +96,11 @@ function AviatorFlight({
       setIsResetting(true); // Hide aviator before resetting
       setLeftAviatorX(-1000); // ✅ hide left aviator too
       setLeftAviatorY(-1000);
+
+      // ✅ Reset Golden Eagle to branch position
+      setIsGoldenEagleFlying(false);
+      setGoldenEagleX(0);
+      setGoldenEagleY(0);
 
       if (hotAirData?.status === 0) {
         localStorage.removeItem("kitePosition");
@@ -119,14 +130,26 @@ function AviatorFlight({
       setAviatorStartX(aviatorX);
       setAviatorStartY(aviatorY);
       status2StartTimeRef.current = performance.now(); // ✅ capture exact start tim
+      
+      // ✅ When status 2: Golden Eagle returns to branch immediately
+      setIsGoldenEagleFlying(false);
+      setGoldenEagleX(0);
+      setGoldenEagleY(0);
     }
     if (hotAirData?.status === 3 && !status3StartTimeRef.current) {
       status3StartTimeRef.current = performance.now();
+
+      // ✅ When status 3: Golden Eagle starts flying with kite immediately
+      setIsGoldenEagleFlying(true);
 
       // Only if we have a valid end position from status 1
       if (status1EndPosition.x !== 0 || status1EndPosition.y !== 0) {
         setAviatorX(status1EndPosition.x);
         setAviatorY(status1EndPosition.y);
+
+        // ✅ Set Golden Eagle to same position as kite
+        setGoldenEagleX(status1EndPosition.x);
+        setGoldenEagleY(status1EndPosition.y);
 
         // Start trajectory with just the last point from status 1
         setStatus1Trajectory((prev) => {
@@ -141,14 +164,6 @@ function AviatorFlight({
         ]);
       }
     }
-    // ✅ NEW: Handle status 3 start time
-    // if (hotAirData?.status === 3 && status3StartTime === null) {
-    //   status3StartTimeRef.current = performance.now(); // ✅ new start
-    //   if (status1EndPosition.x !== 0 || status1EndPosition.y !== 0) {
-    //     setAviatorX(status1EndPosition.x);
-    //     setAviatorY(status1EndPosition.y);
-    //   }
-    // }
   }, [hotAirData?.status]);
 
   useEffect(() => {
@@ -268,6 +283,12 @@ function AviatorFlight({
           setAviatorX(currentX);
           setAviatorY(currentY);
 
+          // ✅ Update Golden Eagle position to match kite when flying
+          if (isGoldenEagleFlying) {
+            setGoldenEagleX(currentX);
+            setGoldenEagleY(currentY);
+          }
+
           // Continue adding to trajectory points
           // Update trajectory points
           setStatus3Trajectory((prev) => {
@@ -283,27 +304,23 @@ function AviatorFlight({
             return prev;
           });
 
-          // oscillationStartY = -curveY;
-
           // Add oscillation if we've reached the end of continuation
           if (continuationProgress >= 1 && !isOscillating) {
             if (!isOscillating) {
               setIsOscillating(true);
               oscillationStartY = currentY;
             }
-            // oscillationFactor = Math.sin(time / 200) * 0.5;
-            // setAviatorY((prevY) => prevY + oscillationFactor);
-            // setTrajectoryPoints((prev) =>
-            //   prev.map((p) => ({
-            //     x: p.x,
-            //     y: p.y + oscillationFactor * (p.y / oscillationStartY),
-            //   }))
-            // );
             if (continuationProgress >= 1 && !isOscillating) {
               setIsOscillating(true);
               oscillationStartY = currentY;
               oscillationFactor = Math.sin(time / 200) * 0.5;
               setAviatorY((prevY) => prevY + oscillationFactor);
+              
+              // ✅ Update Golden Eagle oscillation too
+              if (isGoldenEagleFlying) {
+                setGoldenEagleY((prevY) => prevY + oscillationFactor);
+              }
+              
               setStatus3Trajectory((prev) =>
                 prev.map((p) => ({
                   x: p.x,
@@ -316,6 +333,9 @@ function AviatorFlight({
       } else if (hotAirData?.status === 2) {
         setIsOscillating(false);
         console.log("🛫 Aviator1 flew away");
+         setIsGoldenEagleFlying(false);
+  setGoldenEagleX(0);
+  setGoldenEagleY(0);
         // let flyProgress = Math.min(elapsed / 8000, 1);
         let delay = 1200; // 2 seconds delay
         let flyProgress = Math.min(Math.max((elapsed - delay) / 1000, 0), 1);
@@ -324,11 +344,6 @@ function AviatorFlight({
         let flyY = aviatorY - flyProgress * 1.5 * parentHeight; // Adjust Y movement
         setAviatorX(flyX);
         setAviatorY(flyY);
-
-        setTimeout(() => {
-          setTrajectoryPoints([]); // Clear only after some time in status 2
-          setStatus3Trajectory([]); // Also clear status 3 trajectory
-        }, 1000);
 
         // 🦅 Left aviator matches main aviator during flight for collision
         const COLLISION_DELAY = 500;
@@ -384,8 +399,6 @@ function AviatorFlight({
           setRightAviatorY(aviatorY);
         }
 
-        // setLeftAviatorX(flyX);
-        // setLeftAviatorY(-flyY);
         if (!isModalOpen) {
           setIsModalOpen(true); // Ensure it is set only once
         }
@@ -409,7 +422,7 @@ function AviatorFlight({
     }
 
     return () => cancelAnimationFrame(animationFrame);
-  }, [hotAirData?.status]);
+  }, [hotAirData?.status, isGoldenEagleFlying]);
 
   console.log("tracjhectrye0", trajectoryPoints);
 
@@ -471,16 +484,18 @@ function AviatorFlight({
   }, [hotAirData?.status]);
 
   // ✅ FIX: Combine trajectories for status 3, show connected path
-  let combinedTrajectory = [];
+ let combinedTrajectory = [];
 
-  if (hotAirData?.status === 3) {
-    // For status 3: show both status 1 trajectory + status 3 trajectory (connected)
-    combinedTrajectory = [...trajectoryPoints, ...status3Trajectory];
-  } else {
-    // For other statuses: show normal trajectory
-    combinedTrajectory = trajectoryPoints;
-  }
-
+if (hotAirData?.status === 3) {
+  // For status 3: show both status 1 trajectory + status 3 trajectory (connected)
+  combinedTrajectory = [...trajectoryPoints, ...status3Trajectory];
+} else if (hotAirData?.status === 2) {
+  // For status 2: hide ALL trajectories immediately
+  combinedTrajectory = [];
+} else {
+  // For other statuses (like status 1): show normal trajectory
+  combinedTrajectory = trajectoryPoints;
+}
   const linePoints = combinedTrajectory.flatMap((p) => [
     p.x,
     parentRef.current?.clientHeight - p.y,
@@ -554,22 +569,23 @@ function AviatorFlight({
     return () => clearTimeout(timer);
   }, [hotAirData?.status]);
 
-  const [isGoldenEagleActive, setIsGoldenEagleActive] = useState(false);
-  useEffect(() => {
-    if (hotAirData?.status === 3) {
-      // ✅ Set in localStorage
-      localStorage.setItem("goldenEagleActive", "true");
-      setIsGoldenEagleActive(true);
+  // ✅ REMOVED: Old isGoldenEagleActive logic - now using isGoldenEagleFlying
+  // const [isGoldenEagleActive, setIsGoldenEagleActive] = useState(false);
+  // useEffect(() => {
+  //   if (hotAirData?.status === 3) {
+  //     // ✅ Set in localStorage
+  //     localStorage.setItem("goldenEagleActive", "true");
+  //     setIsGoldenEagleActive(true);
 
-      // ✅ Remove after 1 second
-      const timer = setTimeout(() => {
-        localStorage.removeItem("goldenEagleActive");
-        setIsGoldenEagleActive(false);
-      }, 1000);
+  //     // ✅ Remove after 1 second
+  //     const timer = setTimeout(() => {
+  //       localStorage.removeItem("goldenEagleActive");
+  //       setIsGoldenEagleActive(false);
+  //     }, 2000);
 
-      return () => clearTimeout(timer);
-    }
-  }, [hotAirData?.status]);
+  //     return () => clearTimeout(timer);
+  //   }
+  // }, [hotAirData?.status]);
 
   const [isPreFlip, setIsPreFlip] = useState(false);
   const [isFlipped, setIsFlipped] = useState(false);
@@ -651,14 +667,15 @@ function AviatorFlight({
           {/* Branch as the base (always visible) */}
           <img src={left_tree} alt="Branch" className="w-14 sm:w-20 h-auto" />
 
-          {/* ✅ Golden Eagle appears only when condition is true */}
-          {!isGoldenEagleActive && (
-            <img
-              src={goldenEagle}
-              alt="Golden Eagle"
-              className="absolute w-14 h-14 sm:w-24 sm:h-24 left-4 sm:left-10 transform -translate-x-1/2 -top-3 sm:-top-8"
-            />
-          )}
+          {/* ✅ Golden Eagle appears only when NOT flying with kite */}
+{/* ✅ Golden Eagle appears only when NOT flying with kite */}
+{!isGoldenEagleFlying && (
+  <img
+    src={goldenEagle}
+    alt="Golden Eagle"
+    className="absolute w-14 h-14 sm:w-24 sm:h-24 left-4 sm:left-10 transform -translate-x-1/2 -top-3 sm:-top-8"
+  />
+)}
         </div>
       </div>
 
@@ -838,21 +855,22 @@ function AviatorFlight({
             }}
           />
         )}
-        {isGoldenEagleActive && (
-          <img
-            src={goldenEagleFly}
-            alt="golden-eagle"
-            className="w-10 h-10 xsm:w-32 xsm:h-28 -ml-4 xs:-ml-6 xsm:-ml-10 md:w-20 md:h-20 xs:!bottom-8 relative -mt-16 z-40 -bottom-2"
-            style={{
-              transform: `translate(${aviatorX}px, ${translateY}px) scaleX(${scaleX})`,
-              transformOrigin: "center",
-              opacity: isResetting ? 0 : 1,
-              position: "absolute",
-              pointerEvents: "none",
-              transition: "transform 0.15s ease-in-out", // smooth upward + flip
-            }}
-          />
-        )}
+   {/* ✅ NEW: Golden Eagle Flying with Kite */}
+{isGoldenEagleFlying && (
+  <img
+    src={goldenEagleFly}
+    alt="golden-eagle"
+    className="w-10 h-10 xsm:w-32 xsm:h-28 -ml-4 xs:-ml-6 xsm:-ml-10 md:w-20 md:h-20 xs:!bottom-8 relative -mt-16 z-40 -bottom-2"
+    style={{
+      transform: `translate(${goldenEagleX}px, ${goldenEagleY}px) scaleX(1)`,
+      transformOrigin: "center",
+      opacity: isResetting ? 0 : 1,
+      position: "absolute",
+      pointerEvents: "none",
+      transition: "transform 0.05s linear", // smooth movement with kite
+    }}
+  />
+)}
       </div>
 
       {["1", "2", "3", "4", "5"].includes(changeBg?.image) ? (
