@@ -1,3 +1,11 @@
+
+
+
+
+
+
+
+
 /* eslint-disable react/prop-types */
 import { useEffect, useState, useRef } from "react";
 import { Stage, Layer, Line } from "react-konva";
@@ -20,9 +28,7 @@ import bg_four from "../../assets/usaAsset/aviator/bg_four.png";
 import bg_five from "../../assets/usaAsset/aviator/bg_five.png";
 import right_TREE from "../../assets/usaAsset/aviator/right-TREE.png";
 import left_tree from "../../assets/usaAsset/aviator/left-tree.png";
-import coinsShowerGif from "../../assets/usaAsset/aviator/newcoins.gif"; // Add your coins shower gif path
-import Lottie from "lottie-react";
-import coinJson from "./coinJson.json";
+
 function AviatorFlight({
   changeBg,
   setChangeBg,
@@ -72,21 +78,13 @@ function AviatorFlight({
   const [isGoldenEagleFlying, setIsGoldenEagleFlying] = useState(false);
   const [goldenEagleX, setGoldenEagleX] = useState(0);
   const [goldenEagleY, setGoldenEagleY] = useState(0);
-
+  
   // ✅ Track max height reached
   const [maxHeightReached, setMaxHeightReached] = useState(false);
   const maxHeightRef = useRef(false);
-
+  
   // ✅ NEW: Store final max height position for oscillation
   const [finalMaxPosition, setFinalMaxPosition] = useState({ x: 0, y: 0 });
-
-  // ✅ NEW: Coins shower animation
-  const [showCoinsShower, setShowCoinsShower] = useState(false);
-  const [coinsPosition, setCoinsPosition] = useState({ x: 0, y: -100 });
-
-  // ✅ NEW: Golden Eagle return animation state
-  const [isGoldenEagleReturning, setIsGoldenEagleReturning] = useState(false);
-  const goldenEagleReturnStartTimeRef = useRef(null);
 
   useEffect(() => {
     const handleSocket = (hotair) => {
@@ -113,19 +111,13 @@ function AviatorFlight({
 
       // ✅ Reset Golden Eagle to branch position
       setIsGoldenEagleFlying(false);
-      setIsGoldenEagleReturning(false);
       setGoldenEagleX(0);
       setGoldenEagleY(0);
-      goldenEagleReturnStartTimeRef.current = null;
-
+      
       // ✅ Reset max height tracking
       setMaxHeightReached(false);
       maxHeightRef.current = false;
       setFinalMaxPosition({ x: 0, y: 0 }); // ✅ Reset final position
-
-      // ✅ Reset coins shower
-      setShowCoinsShower(false);
-      setCoinsPosition({ x: 0, y: -100 });
 
       if (hotAirData?.status === 0) {
         localStorage.removeItem("kitePosition");
@@ -153,36 +145,27 @@ function AviatorFlight({
       setMaxHeightReached(false);
       maxHeightRef.current = false;
       setFinalMaxPosition({ x: 0, y: 0 }); // ✅ Reset final position
-
-      // ✅ Reset coins shower and golden eagle return
-      setShowCoinsShower(false);
-      setIsGoldenEagleReturning(false);
-      goldenEagleReturnStartTimeRef.current = null;
     }
+
     if (hotAirData?.status === 2) {
       setAviatorStartX(aviatorX);
       setAviatorStartY(aviatorY);
       status2StartTimeRef.current = performance.now();
+      
       // ✅ FIXED: Don't return golden eagle in status 2, it should already be on branch
-      setShowCoinsShower(false);
     }
+    
     if (hotAirData?.status === 3 && !status3StartTimeRef.current) {
       status3StartTimeRef.current = performance.now();
 
       // ✅ When status 3: Golden Eagle starts flying with kite immediately
       setIsGoldenEagleFlying(true);
-
+      
       // ✅ Reset max height tracking for status 3
       setMaxHeightReached(false);
       maxHeightRef.current = false;
       setFinalMaxPosition({ x: 0, y: 0 }); // ✅ Reset final position
 
-      // ✅ Reset coins shower and golden eagle return
-      setShowCoinsShower(false);
-      setIsGoldenEagleReturning(false);
-      goldenEagleReturnStartTimeRef.current = null;
-      setShowCoinsShower(true);
-      setCoinsPosition({ x: 0, y: -100 });
       // Only if we have a valid end position from status 1
       if (status1EndPosition.x !== 0 || status1EndPosition.y !== 0) {
         setAviatorX(status1EndPosition.x);
@@ -297,7 +280,7 @@ function AviatorFlight({
             status3Elapsed / continuationDuration,
             1
           );
-
+          
           // ✅ FIXED: Only update position if max height not reached
           if (!maxHeightRef.current) {
             const startX = status1EndPosition.x;
@@ -315,7 +298,7 @@ function AviatorFlight({
             }
             const currentX = startX + (curveX - startX) * continuationProgress;
             const currentY = startY + (-curveY - startY) * continuationProgress;
-
+            
             setAviatorX(currentX);
             setAviatorY(currentY);
 
@@ -337,18 +320,20 @@ function AviatorFlight({
               }
               return prev;
             });
+
             // ✅ FIXED: Check if max height reached
             if (continuationProgress >= 1) {
               maxHeightRef.current = true;
               setMaxHeightReached(true);
+              
               // ✅ Store final max position for oscillation
               setFinalMaxPosition({ x: currentX, y: currentY });
-              // ✅ Start coins shower animation - trigger when golden eagle touches kite
-              setShowCoinsShower(true);
-              setCoinsPosition({ x: currentX, y: 0 }); // Start from top of screen
-              // ✅ Start Golden Eagle return animation (slower)
-              setIsGoldenEagleReturning(true);
-              goldenEagleReturnStartTimeRef.current = performance.now();
+              
+              // ✅ Golden Eagle returns to branch immediately when max height is reached
+              setIsGoldenEagleFlying(false);
+              setGoldenEagleX(0);
+              setGoldenEagleY(0);
+              
               // ✅ Start oscillation at max height
               setIsOscillating(true);
               oscillationStartY = currentY;
@@ -363,7 +348,7 @@ function AviatorFlight({
       } else if (hotAirData?.status === 2) {
         setIsOscillating(false);
         console.log("🛫 Aviator1 flew away");
-
+        
         let delay = 1200;
         let flyProgress = Math.min(Math.max((elapsed - delay) / 1000, 0), 1);
 
@@ -430,7 +415,7 @@ function AviatorFlight({
       }
       animationFrame = requestAnimationFrame(animate);
     }
-
+    
     if (hotAirData?.status === 1) {
       status1StartTimeRef.current = performance.now();
     }
@@ -449,83 +434,6 @@ function AviatorFlight({
 
     return () => cancelAnimationFrame(animationFrame);
   }, [hotAirData?.status, isGoldenEagleFlying, finalMaxPosition]); // ✅ Added finalMaxPosition dependency
-  // ✅ NEW: Golden Eagle Return Animation
-  // ✅ FIXED: Golden Eagle Return Animation - STRAIGHT LINE
-  useEffect(() => {
-    let animationFrame;
-
-    function animateGoldenEagleReturn(time) {
-      if (isGoldenEagleReturning && goldenEagleReturnStartTimeRef.current) {
-        const elapsed = time - goldenEagleReturnStartTimeRef.current;
-        const returnDuration = 1000; // Slower return
-        const returnProgress = Math.min(elapsed / returnDuration, 1);
-
-        // ✅ Stop coins shower when golden eagle starts returning
-        if (returnProgress > 0) {
-          setShowCoinsShower(false);
-        }
-
-        // ✅ STRAIGHT LINE MOVEMENT - Linear interpolation
-        const startX = finalMaxPosition.x;
-        const startY = finalMaxPosition.y;
-        const targetX = -25; // Branch position (0, 0)
-        const targetY = -200; // Branch position (0, 0)
-
-        // Direct straight line calculation
-        const currentX = startX + (targetX - startX) * returnProgress;
-        const currentY = startY + (targetY - startY) * returnProgress;
-
-        setGoldenEagleX(currentX);
-        setGoldenEagleY(currentY);
-
-        if (returnProgress >= 1) {
-          // Return complete, hide flying eagle and show on branch
-          setIsGoldenEagleFlying(false);
-          setIsGoldenEagleReturning(false);
-          setGoldenEagleX(0);
-          setGoldenEagleY(0);
-          goldenEagleReturnStartTimeRef.current = null;
-        } else {
-          animationFrame = requestAnimationFrame(animateGoldenEagleReturn);
-        }
-      }
-    }
-
-    if (isGoldenEagleReturning) {
-      //  goldenEagleReturnStartTimeRef.current = performance.now();
-      animationFrame = requestAnimationFrame(animateGoldenEagleReturn);
-    }
-
-    return () => cancelAnimationFrame(animationFrame);
-  }, [isGoldenEagleReturning, finalMaxPosition]);
-  // ✅ NEW: Coins Shower Animation
-  useEffect(() => {
-    let animationFrame;
-
-    function animateCoinsShower() {
-      if (showCoinsShower) {
-        setCoinsPosition((prev) => ({
-          x: prev.x,
-          y: prev.y + 3, // Fall speed
-        }));
-
-        // Hide coins when they fall below screen
-        const parentHeight = parentRef.current?.clientHeight || 600;
-        if (coinsPosition.y > parentHeight + 100) {
-          setShowCoinsShower(false);
-          setCoinsPosition({ x: 0, y: -100 });
-        } else {
-          animationFrame = requestAnimationFrame(animateCoinsShower);
-        }
-      }
-    }
-
-    if (showCoinsShower) {
-      animationFrame = requestAnimationFrame(animateCoinsShower);
-    }
-
-    return () => cancelAnimationFrame(animationFrame);
-  }, [showCoinsShower, coinsPosition.y]);
 
   useEffect(() => {
     let animationFrame;
@@ -548,7 +456,7 @@ function AviatorFlight({
       }
       return dotsArray;
     }
-
+    
     function animateDots() {
       setDots((prevDots) =>
         prevDots.map((dot) => ({
@@ -565,7 +473,7 @@ function AviatorFlight({
       );
       animationFrame = requestAnimationFrame(animateDots);
     }
-
+    
     if (
       (hotAirData?.status === 1 ||
         hotAirData?.status === 2 ||
@@ -596,12 +504,12 @@ function AviatorFlight({
   } else {
     combinedTrajectory = trajectoryPoints;
   }
-
+  
   const linePoints = combinedTrajectory.flatMap((p) => [
     p.x,
     parentRef.current?.clientHeight - p.y,
   ]);
-
+  
   const filledPolygon = [
     0,
     parentRef.current?.clientHeight || 0,
@@ -726,33 +634,21 @@ function AviatorFlight({
     }
   }, [hotAirData?.status, hotAirData?.timer]);
 
+  // console.log("hotAirData?.status 3333333:", filledPolygon, linePoints);
+  // console.log("isPathRemoved", isPathRemoved);
   return (
     <div
       ref={parentRef}
       className="h-full relative border-[0.2px] overflow-hidden border-gray rounded-2xl"
     >
-      {/* ✅ NEW: Coins Shower Animation */}
-      {showCoinsShower && (
-        <Lottie
-          animationData={coinJson}
-          loop
-          autoplay
-          className="w-full h-full z-50"
-          style={{
-            transform: `translate(${coinsPosition.x - 40}px, ${
-              coinsPosition.y
-            }px)`,
-            position: "absolute",
-            pointerEvents: "none",
-            left: "0px",
-            top: "0px",
-          }}
-        />
-      )}
+      {/* Top-left aviator */}
+
       {/* ✅ Left Branch Always Visible */}
       <div className="absolute top-12 left-22 z-50">
         <div className="relative w-28 sm:w-40">
+          {/* Branch as the base (always visible) */}
           <img src={left_tree} alt="Branch" className="w-14 sm:w-20 h-auto" />
+          {/* ✅ Golden Eagle appears only when NOT flying with kite */}
           {!isGoldenEagleFlying && (
             <img
               src={goldenEagle}
@@ -762,15 +658,17 @@ function AviatorFlight({
           )}
         </div>
       </div>
-
+      {/* Top-right aviator */}
       {/* ✅ Right Branch Always Visible */}
       <div className="absolute top-14 right-0 z-50">
         <div className="relative w-28 sm:w-40">
+          {/* Branch as the base */}
           <img
             src={right_TREE}
             alt="Right Branch"
             className="w-14 sm:w-28 h-auto ml-auto"
           />
+          {/* ✅ Black Eagle only shows when status != 2 */}
           {hotAirData?.status != 2 && (
             <img
               src={blackEgale}
@@ -933,15 +831,14 @@ function AviatorFlight({
             }}
           />
         )}
-
         {/* ✅ NEW: Golden Eagle Flying with Kite */}
         {isGoldenEagleFlying && (
           <img
             src={goldenEagleFly}
             alt="golden-eagle"
-            className="w-14 h-14 rotate- xsm:w-32 xsm:h-28 -ml-4 xs:-ml-6 xsm:-ml-10 md:w-28 md:h-28 xs:!bottom-8 relative -mt-16 z-40 -bottom-2"
+            className="w-14 h-14 xsm:w-32 xsm:h-28 -ml-4 xs:-ml-6 xsm:-ml-10 md:w-20 md:h-20 xs:!bottom-8 relative -mt-16 z-40 -bottom-2"
             style={{
-              transform: `translate(${goldenEagleX}px, ${goldenEagleY}px) scaleX(-1)`,
+              transform: `translate(${goldenEagleX}px, ${goldenEagleY}px) scaleX(1)`,
               transformOrigin: "center",
               opacity: isResetting ? 0 : 1,
               position: "absolute",
