@@ -1,58 +1,83 @@
-import AviatorHeader from './AviatorHeader'
-import HeightListBar from './HeightListBar'
-import AviatorFlight from './AviatorFlight'
-import BetSection from './BetSection'
-import AllBetsHome from './AllBetsHome'
-import { useEffect, useState } from 'react'
+import AviatorHeader from "./AviatorHeader";
+import HeightListBar from "./HeightListBar";
+import AviatorFlight from "./AviatorFlight";
+import BetSection from "./BetSection";
+import AllBetsHome from "./AllBetsHome";
+import { useEffect, useState } from "react";
 import { IoCaretDownSharp, IoCaretUpSharp } from "react-icons/io5";
 import { GrRefresh } from "react-icons/gr";
-import axios from 'axios'
-import { socket } from './AviatorSocket'
-import { configModalUsaWin } from '../../utils/apis'
+import axios from "axios";
+import { socket } from "./AviatorSocket";
+import { configModalUsaWin } from "../../utils/apis";
 import { useProfile } from "../../reusable_component/gameApi";
-
 
 function AviatorHome() {
   const [isPathRemoved, setIsPathRemoved] = useState(false);
   const [isSoundOn, setIsSoundOn] = useState(true);
-  const [changeBg, setChangeBg] = useState({modal:false,selectBg:false,image:""});
-  const [openHeightListModal, setOpenHeightListModal] = useState(false)
-  const [refreshHeightList, setRefreshHeightList] = useState(false)
-  const [betApiHitted, setBetApiHitted] = useState({ cancel1: false, cancel2: false, bet1: false, bet2: false, cashout1: false, cashout2: false })
-  const [btn, setBtn] = useState({ btn1: false, btn2: false })
-  const [getData, setGetData] = useState(null)
+  const [changeBg, setChangeBg] = useState({
+    modal: false,
+    selectBg: false,
+    image: "",
+  });
+  const [openHeightListModal, setOpenHeightListModal] = useState(false);
+  const [refreshHeightList, setRefreshHeightList] = useState(false);
+  const [betApiHitted, setBetApiHitted] = useState({
+    cancel1: false,
+    cancel2: false,
+    bet1: false,
+    bet2: false,
+    cashout1: false,
+    cashout2: false,
+  });
+  const [btn, setBtn] = useState({ btn1: false, btn2: false });
+  const [getData, setGetData] = useState(null);
   const [hotAirData, setHotAirData] = useState(null);
+  const [status3SecondResponse, setStatus3SecondResponse] = useState(null);
+
   useEffect(() => {
     const handleSocket = (hotair) => {
       const q = JSON.parse(hotair);
-      console.log("hotair data of golden eagle: ",q)
-      setHotAirData(q);
+      console.log("hotair data of golden eagle: ", q);
+       if (q?.status === 3 && hotAirData?.status === 3) {
+      setStatus3SecondResponse(q);
+    }
+    setHotAirData(q);
     };
+   
 
     socket.on("rootspinity_aviators", handleSocket);
     return () => socket.off("rootspinity_aviators", handleSocket);
   }, []);
   const getPreviousResult = async () => {
     try {
-      const res = await axios.get(`${configModalUsaWin}aviator_last_five_result`)
+      const res = await axios.get(
+        `${configModalUsaWin}aviator_last_five_result`
+      );
       // console.log("first", res)
       if (res?.data?.status === 200 || res?.data?.status === "200") {
-        setGetData(res?.data?.data)
+        setGetData(res?.data?.data);
       }
     } catch (err) {
-      console.log(err)
+      console.log(err);
     } finally {
-      setRefreshHeightList(false)
+      setRefreshHeightList(false);
     }
-  }
+  };
   // console.log("getData",hotAirData)
   useEffect(() => {
-    getPreviousResult()
-  }, [refreshHeightList])
-  const colors = ["text-[#F85050]", "text-blue-500", "text-green", "text-yellow", "text-purple-500", "text-pink-500"];
+    getPreviousResult();
+  }, [refreshHeightList]);
+  const colors = [
+    "text-[#F85050]",
+    "text-blue-500",
+    "text-green",
+    "text-yellow",
+    "text-purple-500",
+    "text-pink-500",
+  ];
 
   const userId = localStorage.getItem("userId");
-    const { myDetails, loading, error, fetchProfileDetails } = useProfile(userId);
+  const { myDetails, loading, error, fetchProfileDetails } = useProfile(userId);
   return (
     <>
       <AviatorHeader
@@ -112,6 +137,8 @@ function AviatorHome() {
                 setIsSoundOn={setIsSoundOn}
                 isPathRemoved={isPathRemoved}
                 setIsPathRemoved={setIsPathRemoved}
+                status3SecondResponse={status3SecondResponse}
+                setStatus3SecondResponse={setStatus3SecondResponse}
               />
             </div>
           </div>
@@ -120,6 +147,8 @@ function AviatorHome() {
               setBtn={setBtn}
               setBetApiHitted={setBetApiHitted}
               myDetails={myDetails}
+              status3SecondResponse={status3SecondResponse}
+              setStatus3SecondResponse={setStatus3SecondResponse}
             />
           </div>
         </div>
@@ -159,4 +188,4 @@ function AviatorHome() {
   );
 }
 
-export default AviatorHome
+export default AviatorHome;

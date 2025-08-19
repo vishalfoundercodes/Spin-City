@@ -20,7 +20,7 @@ import bg_four from "../../assets/usaAsset/aviator/bg_four.png";
 import bg_five from "../../assets/usaAsset/aviator/bg_five.png";
 import right_TREE from "../../assets/usaAsset/aviator/right-TREE.png";
 import left_tree from "../../assets/usaAsset/aviator/left-tree.png";
-import coinsShowerGif from "../../assets/usaAsset/aviator/newcoins.gif"; // Add your coins shower gif path
+// import coinsShowerGif from "../../assets/usaAsset/aviator/newcoins.gif"; // Add your coins shower gif path
 import Lottie from "lottie-react";
 import coinJson from "./coinJson.json";
 function AviatorFlight({
@@ -30,6 +30,8 @@ function AviatorFlight({
   setIsSoundOn,
   isPathRemoved,
   setIsPathRemoved,
+  status3SecondResponse,
+  setStatus3SecondResponse
 }) {
   const [leftAviatorX, setLeftAviatorX] = useState(0);
   const [leftAviatorY, setLeftAviatorY] = useState(0);
@@ -62,7 +64,6 @@ function AviatorFlight({
     y: 0,
     progress: 0,
   });
-
   const parentRef = useRef(null);
   const [dots, setDots] = useState([]);
   let oscillationStartY = 0;
@@ -87,17 +88,53 @@ function AviatorFlight({
   // ✅ NEW: Golden Eagle return animation state
   const [isGoldenEagleReturning, setIsGoldenEagleReturning] = useState(false);
   const goldenEagleReturnStartTimeRef = useRef(null);
+  // Add these new state variables at the top of your component
+  const [gameFlowCase, setGameFlowCase] = useState(null); // 'case_a' or 'case_b'
+  const [hasStatus3Occurred, setHasStatus3Occurred] = useState(false);
+  const [isGoldenEagleActive, setIsGoldenEagleActive] = useState(false);
+  const [shouldRemovePath, setShouldRemovePath] = useState(false);
+  const [showDelayedModal, setShowDelayedModal] = useState(false);
 
   useEffect(() => {
     const handleSocket = (hotair) => {
       const q = JSON.parse(hotair);
+      if (q.status === 3 && hotAirData?.status === 3) {
+        setStatus3SecondResponse(q);
+        return;
+      }
+
+      // Reset golden eagle state on status 0
+      if (q.status === 0) {
+        setIsGoldenEagleActive(false);
+        setIsGoldenEagleFlying(false);
+        setGoldenEagleX(0);
+        setGoldenEagleY(0);
+      }
+
+      // Only activate golden eagle if we have status 1 data
+      if (q.status === 3 && status1EndPosition.x !== 0) {
+        setIsGoldenEagleActive(true);
+        setIsGoldenEagleFlying(true);
+        setGoldenEagleX(status1EndPosition.x);
+        setGoldenEagleY(status1EndPosition.y);
+      }
+
       setHotAirData(q);
     };
-
     socket.on("rootspinity_aviators", handleSocket);
     return () => socket.off("rootspinity_aviators", handleSocket);
-  }, []);
-
+  }, [hotAirData?.status, status1EndPosition]);
+useEffect(() => {
+  if (status3SecondResponse) {
+    const timer = setTimeout(() => {
+      setShowDelayedModal(true);
+    }, 1000); // 1 second delay
+    
+    return () => clearTimeout(timer);
+  } else {
+    setShowDelayedModal(false);
+  }
+}, [status3SecondResponse]);
   useEffect(() => {
     const img = localStorage.getItem("aviatorBg");
     if (img) {
@@ -107,6 +144,11 @@ function AviatorFlight({
 
   useEffect(() => {
     if (hotAirData?.status === 0) {
+      // Reset game flow tracking
+      setShouldRemovePath(false);
+      setGameFlowCase(null);
+      setHasStatus3Occurred(false);
+
       setIsResetting(true);
       setLeftAviatorX(-1000);
       setLeftAviatorY(-1000);
@@ -121,13 +163,14 @@ function AviatorFlight({
       // ✅ Reset max height tracking
       setMaxHeightReached(false);
       maxHeightRef.current = false;
-      setFinalMaxPosition({ x: 0, y: 0 }); // ✅ Reset final position
+      setFinalMaxPosition({ x: 0, y: 0 });
 
       // ✅ Reset coins shower
       setShowCoinsShower(false);
       setCoinsPosition({ x: 0, y: -100 });
 
       if (hotAirData?.status === 0) {
+        setStatus3SecondResponse(null); // ✅ Add this line
         localStorage.removeItem("kitePosition");
         localStorage.removeItem("kitePath");
         localStorage.removeItem("kiteStartTime");
@@ -152,21 +195,34 @@ function AviatorFlight({
       // ✅ Reset max height tracking for new round
       setMaxHeightReached(false);
       maxHeightRef.current = false;
-      setFinalMaxPosition({ x: 0, y: 0 }); // ✅ Reset final position
+      setFinalMaxPosition({ x: 0, y: 0 });
 
       // ✅ Reset coins shower and golden eagle return
       setShowCoinsShower(false);
       setIsGoldenEagleReturning(false);
       goldenEagleReturnStartTimeRef.current = null;
     }
+
     if (hotAirData?.status === 2) {
+      // ✅ Determine game flow case when status 2 occurs
+      if (hasStatus3Occurred) {
+        setGameFlowCase("case_a"); // 0,1,3,2 flow
+        console.log("🎮 Game Flow: Case A (0,1,3,2)");
+      } else {
+        setGameFlowCase("case_b"); // 0,1,2 flow
+        console.log("🎮 Game Flow: Case B (0,1,2)");
+      }
+
       setAviatorStartX(aviatorX);
       setAviatorStartY(aviatorY);
       status2StartTimeRef.current = performance.now();
-      // ✅ FIXED: Don't return golden eagle in status 2, it should already be on branch
       setShowCoinsShower(false);
     }
+
     if (hotAirData?.status === 3 && !status3StartTimeRef.current) {
+      // ✅ Mark that status 3 has occurred
+      setHasStatus3Occurred(true);
+
       status3StartTimeRef.current = performance.now();
 
       // ✅ When status 3: Golden Eagle starts flying with kite immediately
@@ -175,7 +231,7 @@ function AviatorFlight({
       // ✅ Reset max height tracking for status 3
       setMaxHeightReached(false);
       maxHeightRef.current = false;
-      setFinalMaxPosition({ x: 0, y: 0 }); // ✅ Reset final position
+      setFinalMaxPosition({ x: 0, y: 0 });
 
       // ✅ Reset coins shower and golden eagle return
       setShowCoinsShower(false);
@@ -183,6 +239,7 @@ function AviatorFlight({
       goldenEagleReturnStartTimeRef.current = null;
       setShowCoinsShower(true);
       setCoinsPosition({ x: 0, y: -100 });
+
       // Only if we have a valid end position from status 1
       if (status1EndPosition.x !== 0 || status1EndPosition.y !== 0) {
         setAviatorX(status1EndPosition.x);
@@ -202,8 +259,9 @@ function AviatorFlight({
         ]);
       }
     }
-  }, [hotAirData?.status]);
+  }, [hotAirData?.status, hasStatus3Occurred]);
 
+  // ✅ Modified animation useEffect for different golden eagle behaviors
   useEffect(() => {
     let animationFrame;
     let startTime = performance.now();
@@ -285,20 +343,20 @@ function AviatorFlight({
           );
         }
       } else if (hotAirData?.status === 3) {
-        setIsModalOpen(false);
-
+        setIsModalOpen(true);
+        if (!isGoldenEagleActive) {
+          setShouldRemovePath(true);
+        }
         if (status3StartTimeRef.current) {
           const status3Elapsed = time - status3StartTimeRef.current;
           const screenWidth = window.innerWidth;
 
-          // ✅ FIXED: Use 1000ms duration as requested
           const continuationDuration = 1000;
           const continuationProgress = Math.min(
             status3Elapsed / continuationDuration,
             1
           );
 
-          // ✅ FIXED: Only update position if max height not reached
           if (!maxHeightRef.current) {
             const startX = status1EndPosition.x;
             const startY = status1EndPosition.y;
@@ -325,7 +383,6 @@ function AviatorFlight({
               setGoldenEagleY(currentY);
             }
 
-            // ✅ Update trajectory points
             setStatus3Trajectory((prev) => {
               const newPoint = { x: currentX, y: -currentY };
               if (
@@ -337,42 +394,69 @@ function AviatorFlight({
               }
               return prev;
             });
-            // ✅ FIXED: Check if max height reached
+
+            // In your status 3 animation logic (around line 400-410):
             if (continuationProgress >= 1) {
               maxHeightRef.current = true;
               setMaxHeightReached(true);
-              // ✅ Store final max position for oscillation
               setFinalMaxPosition({ x: currentX, y: currentY });
-              // ✅ Start coins shower animation - trigger when golden eagle touches kite
               setShowCoinsShower(true);
-              setCoinsPosition({ x: currentX, y: 0 }); // Start from top of screen
-              // ✅ Start Golden Eagle return animation (slower)
-              setIsGoldenEagleReturning(true);
-              goldenEagleReturnStartTimeRef.current = performance.now();
-              // ✅ Start oscillation at max height
-              setIsOscillating(true);
-              oscillationStartY = currentY;
+              setCoinsPosition({ x: currentX, y: 0 });
+              setShouldRemovePath(true);
+
+              // Only set modal if not already open and still in status 3
+              if (
+                !isModalOpen &&
+                hotAirData?.status === 3 &&
+                !status3SecondResponse
+              ) {
+                const timer = setTimeout(() => {
+                  if (hotAirData?.status === 3 && !status3SecondResponse) {
+                    setIsModalOpen(true);
+                  }
+                }, 2000);
+                return () => clearTimeout(timer);
+              }
             }
-          } else {
-            // ✅ FIXED: Oscillate at final max position only
-            oscillationFactor = Math.sin(time / 200) * 0.5;
-            setAviatorX(finalMaxPosition.x); // Keep X constant at max position
-            setAviatorY(finalMaxPosition.y + oscillationFactor); // Only oscillate Y
           }
         }
       } else if (hotAirData?.status === 2) {
+        if (!isGoldenEagleActive) {
+          setShouldRemovePath(true);
+        }
         setIsOscillating(false);
         console.log("🛫 Aviator1 flew away");
 
-        let delay = 1200;
+        // ✅ For case A (0,1,3,2): start flying immediately from max position
+        // ✅ For case B (0,1,2): use normal delay
+        let delay = gameFlowCase === "case_a" ? 0 : 1200;
         let flyProgress = Math.min(Math.max((elapsed - delay) / 1000, 0), 1);
 
-        let flyX = aviatorX + flyProgress * 2.5 * parentWidth;
-        let flyY = aviatorY - flyProgress * 1.5 * parentHeight;
+        // ✅ For case A: start from final max position instead of current aviator position
+        let startX =
+          gameFlowCase === "case_a" ? finalMaxPosition.x : aviatorStartX;
+        let startY =
+          gameFlowCase === "case_a" ? finalMaxPosition.y : aviatorStartY;
+
+        let flyX = startX + flyProgress * 2.5 * parentWidth;
+        let flyY = startY - flyProgress * 1.5 * parentHeight;
+
         setAviatorX(flyX);
         setAviatorY(flyY);
 
-        // Left aviator collision logic
+        // ✅ MODIFIED: Golden eagle behavior based on game flow case
+        if (gameFlowCase === "case_a") {
+          // Case A: Golden eagle flies away with kite (was already flying)
+          if (isGoldenEagleFlying) {
+            setGoldenEagleX(flyX);
+            setGoldenEagleY(flyY);
+          }
+        } else if (gameFlowCase === "case_b") {
+          // Case B: Golden eagle stays on branch, only black eagle flies
+          // Golden eagle should remain on branch (do nothing)
+        }
+
+        // Left aviator collision logic (unchanged)
         const COLLISION_DELAY = 500;
         const COLLISION_DURATION = 1000;
         let elapsedSinceStatus2 = time - (startTime + COLLISION_DELAY);
@@ -382,15 +466,12 @@ function AviatorFlight({
             elapsedSinceStatus2 / COLLISION_DURATION,
             1
           );
-
           const startX = 0;
           const startY = 0;
           const targetX = aviatorX;
           const targetY = aviatorY;
-
           const interpolatedX = startX + glideProgress * (targetX - startX);
           const interpolatedY = startY + glideProgress * (targetY - startY);
-
           setLeftAviatorX(interpolatedX);
           setLeftAviatorY(interpolatedY);
         } else {
@@ -398,7 +479,7 @@ function AviatorFlight({
           setLeftAviatorY(aviatorY);
         }
 
-        // Right aviator collision logic
+        // Right aviator collision logic (unchanged)
         const COLLISION_DELAY_RIGHT = 500;
         const COLLISION_DURATION_RIGHT = 800;
         let elapsedSinceRightCollision =
@@ -409,12 +490,10 @@ function AviatorFlight({
             elapsedSinceRightCollision / COLLISION_DURATION_RIGHT,
             1
           );
-
           const startX = 0;
           const startY = 0;
           const targetX = aviatorX;
           const targetY = aviatorY;
-
           const interpolatedX = startX - glideProgress * (targetX + startX);
           const interpolatedY = startY + glideProgress * (targetY - startY);
           setRightAviatorX(interpolatedX);
@@ -448,12 +527,65 @@ function AviatorFlight({
     }
 
     return () => cancelAnimationFrame(animationFrame);
-  }, [hotAirData?.status, isGoldenEagleFlying, finalMaxPosition]); // ✅ Added finalMaxPosition dependency
+    // }, [hotAirData?.status, isGoldenEagleFlying, finalMaxPosition, gameFlowCase]); // ✅ Added finalMaxPosition dependency
+  }, [
+    hotAirData?.status,
+    isGoldenEagleFlying,
+    finalMaxPosition,
+    gameFlowCase,
+    aviatorStartX,
+    aviatorStartY,
+  ]);
+  // ✅ NEW: Handle 2-second flight after max height in case 2
+  useEffect(() => {
+    let animationFrame;
+
+    if (maxHeightReached && gameFlowCase === null && hotAirData?.status === 3) {
+      const startTime = performance.now();
+      const flightDuration = 2000; // 2 seconds
+
+      function animateTwoSecondFlight(time) {
+        const elapsed = time - startTime;
+        const progress = Math.min(elapsed / flightDuration, 1);
+
+        if (progress < 1) {
+          // Keep flying for 2 seconds
+          const parentWidth = parentRef.current?.clientWidth || 800;
+          const parentHeight = parentRef.current?.clientHeight || 600;
+
+          const flyX = finalMaxPosition.x + progress * 0.5 * parentWidth;
+          const flyY = finalMaxPosition.y - progress * 0.3 * parentHeight;
+
+          setAviatorX(flyX);
+          setAviatorY(flyY);
+
+          if (isGoldenEagleFlying) {
+            setGoldenEagleX(flyX);
+            setGoldenEagleY(flyY);
+          }
+
+          animationFrame = requestAnimationFrame(animateTwoSecondFlight);
+        } else {
+          // After 2 seconds, continue flying away and show modal
+          setIsModalOpen(true);
+        }
+      }
+
+      animationFrame = requestAnimationFrame(animateTwoSecondFlight);
+    }
+
+    return () => cancelAnimationFrame(animationFrame);
+  }, [
+    maxHeightReached,
+    gameFlowCase,
+    hotAirData?.status,
+    finalMaxPosition,
+    isGoldenEagleFlying,
+  ]);
   // ✅ NEW: Golden Eagle Return Animation
   // ✅ FIXED: Golden Eagle Return Animation - STRAIGHT LINE
   useEffect(() => {
     let animationFrame;
-
     function animateGoldenEagleReturn(time) {
       if (isGoldenEagleReturning && goldenEagleReturnStartTimeRef.current) {
         const elapsed = time - goldenEagleReturnStartTimeRef.current;
@@ -725,7 +857,18 @@ function AviatorFlight({
       console.log("status 1 ");
     }
   }, [hotAirData?.status, hotAirData?.timer]);
-
+  useEffect(() => {
+    let timer;
+    if (hotAirData?.status === 2 && gameFlowCase === "case_b") {
+      timer = setTimeout(() => {
+        setFlipEagle(true);
+      }, 500);
+    } else {
+      setFlipEagle(false);
+    }
+    return () => clearTimeout(timer);
+  }, [hotAirData?.status, gameFlowCase]);
+  console.log("status3SecondResponse",status3SecondResponse)
   return (
     <div
       ref={parentRef}
@@ -763,7 +906,6 @@ function AviatorFlight({
         </div>
       </div>
 
-      {/* ✅ Right Branch Always Visible */}
       <div className="absolute top-14 right-0 z-50">
         <div className="relative w-28 sm:w-40">
           <img
@@ -771,7 +913,8 @@ function AviatorFlight({
             alt="Right Branch"
             className="w-14 sm:w-28 h-auto ml-auto"
           />
-          {hotAirData?.status != 2 && (
+          {/* ✅ MODIFIED: Only show black eagle in case B or when no case determined yet */}
+          {hotAirData?.status !== 2 && gameFlowCase !== "case_a" && (
             <img
               src={blackEgale}
               alt="Black Eagle"
@@ -780,12 +923,15 @@ function AviatorFlight({
           )}
         </div>
       </div>
+
       {isModalOpen && (
         <div
           className="absolute top-[30%] left-1/2 transform -translate-x-1/2
                w-full px-4 z-40 flex flex-col items-center justify-center"
         >
-          {hotAirData?.status === 2 ? (
+          {/* {hotAirData?.status === 2 ? ( */}
+          {hotAirData?.status === 2 ||
+          (hotAirData?.status === 3 && status3SecondResponse &&showDelayedModal) ? (
             <div
               className={`[text-shadow:_0_4px_8px_rgb(99_102_241_/_0.8)]
                     text-white leading-snug font-manrope font-extrabold
@@ -806,10 +952,14 @@ function AviatorFlight({
                           : "white"
                       } text-[3rem] sm:text-[5rem]`}
               >
-                {hotAirData?.timer}x
+                {/* {hotAirData?.timer}x */}
+                {hotAirData?.status === 2
+                  ? hotAirData?.timer
+                  : status3SecondResponse?.timer}
+                x
               </span>
             </div>
-          ) : (
+          ) : hotAirData?.status === 0 ? (
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center z-40">
               <div className="w-48 h-48 xsm:w-64 xsm:h-64 flex items-center justify-center text-white font-bold text-[6rem] xsm:text-[8rem] leading-none">
                 {hotAirData?.betTime}
@@ -830,7 +980,7 @@ function AviatorFlight({
                 <ProgressBarIndicator timer={150} />
               </div>
             </div>
-          )}
+          ) : null}
         </div>
       )}
       <Stage
@@ -840,20 +990,16 @@ function AviatorFlight({
         className="absolute bottom-[40px] xs:bottom-[58px] xsm:bottom-[92px] left-8 xs:left-4 xsm:left-14 z-50 "
       >
         <Layer>
-          {!isPathRemoved && (
-            <Line
-              points={filledPolygon}
-              // fill="rgba(207, 32, 48, 0.6)"
-              closed
-            />
-          )}
-          {!isPathRemoved && (
-            <Line points={linePoints} stroke="#D048A0" strokeWidth={2} />
+          {!shouldRemovePath && ( // Change this condition
+            <>
+              <Line points={filledPolygon} closed />
+              <Line points={linePoints} stroke="#D048A0" strokeWidth={2} />
+            </>
           )}
         </Layer>
       </Stage>
 
-      {(hotAirData?.status === 1 || hotAirData?.status === 3) && (
+      {(hotAirData?.status === 1 ) && (
         <div
           className={`[text-shadow:_0_4px_8px_rgb(99_102_241_/_0.8)]
                            text-white leading-snug
@@ -916,37 +1062,36 @@ function AviatorFlight({
             }}
           />
         )}
-
-        {hotAirData?.status === 2 && (
-          <img
-            src={blackEgaleFly}
-            className="w-24 h-20 xsm:w-32 xsm:h-28 -ml-2 xs:-ml-10 xsm:-ml-16 md:w-40 md:h-32 xs:!bottom-5 relative -mt-16 z-40 -bottom-2"
-            alt="black-eagle"
-            style={{
-              transform: `translate(${aviatorX}px, ${aviatorY}px) scaleX(${
-                flipEagle ? -1 : 1
-              })`,
-              opacity: isResetting ? 0 : 1,
-              position: "absolute",
-              pointerEvents: "none",
-              transition: "transform 0.05s linear", // match the aviator movement
-            }}
-          />
-        )}
+        {/* ✅ MODIFIED: Black eagle only flies in case B */}
+        {hotAirData?.status === 2 &&
+          !isGoldenEagleActive && ( // Modified condition
+            <img
+              src={blackEgaleFly}
+              className="w-24 h-20 xsm:w-32 xsm:h-28 -ml-2 xs:-ml-10 xsm:-ml-16 md:w-40 md:h-32 xs:!bottom-5 relative -mt-16 z-40 -bottom-2"
+              alt="black-eagle"
+              style={{
+                transform: `translate(${aviatorX}px, ${aviatorY}px) scaleX(${
+                  flipEagle ? -1 : 1
+                })`,
+                opacity: isResetting ? 0 : 1,
+                position: "absolute",
+                pointerEvents: "none",
+                transition: "transform 0.05s linear",
+              }}
+            />
+          )}
 
         {/* ✅ NEW: Golden Eagle Flying with Kite */}
-        {isGoldenEagleFlying && (
+        {isGoldenEagleActive && ( // Change this condition
           <img
             src={goldenEagleFly}
-            alt="golden-eagle"
-            className="w-14 h-14 rotate- xsm:w-32 xsm:h-28 -ml-4 xs:-ml-6 xsm:-ml-10 md:w-28 md:h-28 xs:!bottom-8 relative -mt-16 z-40 -bottom-2"
+            className="w-14 h-14 xsm:w-32 xsm:h-28 -ml-4 xs:-ml-6 xsm:-ml-10 md:w-28 md:h-28 xs:!bottom-8 relative -mt-16 z-40 -bottom-2"
             style={{
-              transform: `translate(${goldenEagleX}px, ${goldenEagleY}px) scaleX(-1)`,
-              transformOrigin: "center",
+              transform: `translate(${goldenEagleX}px, ${goldenEagleY}px)`,
               opacity: isResetting ? 0 : 1,
               position: "absolute",
               pointerEvents: "none",
-              transition: "transform 0.05s linear", // smooth movement with kite
+              transition: "transform 0.05s linear",
             }}
           />
         )}

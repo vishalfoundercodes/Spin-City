@@ -147,6 +147,7 @@ function Deposit() {
   }, []);
   // console.log("usdtAmount",usdtAmount,upiAmount)
   const payin_deposit = async () => {
+    console.log("paymenLimts", paymenLimts);
     if (!userId) {
       toast.error("User not logged in");
       navigate("/login");
@@ -301,7 +302,7 @@ function Deposit() {
     try {
       console.log("`${apis?.indianpay}`", `${apis?.indianpay}`);
       const res = await axios.post(`${apis?.indianpay}`, payload);
-      console.log("indianPayPayinHandler response", res.data.status);
+      console.log("indianPayPayinHandler response", res);
       if (res?.status === 200 || res?.data.status === "SUCCESS") {
         console.log("fhbvc");
         const link=res.data.payment_link

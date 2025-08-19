@@ -11,7 +11,7 @@ import "./index.css";
 import { configModalUsaWin } from "../../utils/apis";
 import { useProfile } from "../../reusable_component/gameApi";
 
-function BetButtonTwo({ setBtn, setBetApiHitted }) {
+function BetButtonTwo({ setBtn, setBetApiHitted, status3SecondResponse,setStatus3SecondResponse }) {
   const userId = localStorage.getItem("userId");
   const [betAmount, setBetAmount] = useState(1);
   const [betStatus, setBetStatus] = useState(false);
@@ -47,7 +47,7 @@ function BetButtonTwo({ setBtn, setBetApiHitted }) {
         ? hotAirData?.period
         : hotAirData?.period + 1;
     // const sr = hotAirData?.period + 1
-    console.log("sr", sr);
+    // console.log("sr", sr);
     const payload = {
       uid: userId,
       number: 2,
@@ -55,7 +55,7 @@ function BetButtonTwo({ setBtn, setBetApiHitted }) {
       game_id: 5,
       game_sr_num: sr,
     };
-    console.log("pYLOAD", payload);
+    // console.log("pYLOAD", payload);
     try {
       console.log(`aviator api: ${configModalUsaWin}aviator_bet`);
       const res = await axios.post(`${configModalUsaWin}aviator_bet`, payload);
@@ -171,24 +171,77 @@ function BetButtonTwo({ setBtn, setBetApiHitted }) {
       }
     }
   };
+  const cashoutNormalBetHandlerJackout = async (status3SecondResponse) => {
+    const sr = localStorage.getItem("aviatorsr2");
+    const salt = {
+      uid: userId,
+      multiplier: status3SecondResponse?.timer,
+      game_sr_num: sr,
+      number: 2,
+    };
 
-  // console.log("hotAirDatahotAirData",hotAirData)
-  useEffect(() => {
-    const status = localStorage.getItem("aviatorBet2");
-    if (status == 1) {
-      setBetStatus(true);
-    }
-    if (hotAirData?.status === 2) {
-      const lastBetRound = localStorage.getItem("aviatorsr2");
-      const currentRound = Number(hotAirData?.period);
-      // console.log("lastBetRound and currentRound", betStatus, Number(lastBetRound), currentRound)
-      if (lastBetRound != "0" && Number(lastBetRound) === currentRound) {
+    // Convert salt object to a Base64 encoded string
+    console.log("saltsaltsaltsalt", salt)
+    const saltEncoded = btoa(JSON.stringify(salt));
+    try {
+      const res = await axios.post(
+        `${configModalUsaWin}aviator_cashout?salt=${encodeURIComponent(
+          saltEncoded
+        )}`
+      );
+      // console.log("cashout jackpot jackpot", res);
+      if (res?.data?.status === 200) {
+        setBetApiHitted({ cashout1: true });
         localStorage.setItem("aviatorBet2", "0");
         localStorage.setItem("aviatorsr2", "0");
         setBetStatus(false);
+        toast.success(res?.data?.message, {
+          className: "custom-toast custom-toast-success",
+        });
+      } else {
+        toast.warn(res?.data?.message, {
+          className: "custom-toast custom-toast-warn",
+        });
+      }
+    } catch (err) {
+      console.log("caatchchchchchchc",err)
+      if (err?.response?.data?.status === 500) {
+        console.log("Server problem");
+      } else {
+        toast.error(err?.response?.data?.message, {
+          className: "custom-toast custom-toast-error",
+        });
       }
     }
-  }, [hotAirData, betStatus]);
+  };
+useEffect(()=>{
+      const status=localStorage.getItem("aviatorBet2")
+
+if(status3SecondResponse &&status){
+  cashoutNormalBetHandlerJackout(status3SecondResponse)
+}
+},[status3SecondResponse])
+  // console.log("hotAirDatahotAirData",hotAirData)
+  useEffect(() => {
+    const statusOne = localStorage.getItem("aviatorBet1");
+    const statusTwo = localStorage.getItem("aviatorBet2");
+    if (statusTwo == 1) {
+    //  console.log("alert for status oneonoenoeneoneeone")
+     setBetStatus(true);
+      const lastBetRoundOne = localStorage.getItem("aviatorsr1");
+      const lastBetRoundTwo = localStorage.getItem("aviatorsr2");
+      const currentRound = Number(hotAirData?.period);
+      // console.log("lastBetRound and currentRound", Number(lastBetRoundOne),Number(lastBetRoundTwo), currentRound)
+      if (lastBetRoundTwo != "0" && Number(lastBetRoundTwo) < currentRound) {
+        // console.log("You have already placed a bet in this round.");
+        localStorage.setItem("aviatorBet2", "0");
+        localStorage.setItem("aviatorsr2", "0");
+        setBetStatus(false);
+      }else{
+        setBetStatus(true);
+      }
+    }
+  }, [hotAirData,betStatus]);
   useEffect(() => {
     if (
       isAuto &&

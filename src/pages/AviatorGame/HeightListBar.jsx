@@ -25,6 +25,11 @@ function HeightListBar({ hotAirData, betApiHitted, refreshHeightList, setRefresh
             getPreviousResult()
         }
     }, [hotAirData?.status])
+    useEffect(() => {
+        // if (hotAirData?.status === 0) {
+            getPreviousResult()
+        // }
+    }, [])
     // console.log("hotAirData",hotAirData)
     const colors = ["text-[#F85050]", "text-blue-500", "text-green", "text-yellow", "text-purple-500", "text-pink-500"];
 

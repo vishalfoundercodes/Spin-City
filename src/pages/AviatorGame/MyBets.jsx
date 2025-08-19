@@ -18,7 +18,7 @@ function MyBets({ betApiHitted }) {
         try {
             const res = await axios.post(`${configModalUsaWin}aviator_history`, payload)
             // toast.success(res?.data?.message)
-            console.log("betbetebetebete history aviator left side:", res)
+            // console.log("betbetebetebete history aviator left side:", res)
             if (res?.data?.status === 200) {
                 setWinninDataNew(res?.data?.data)
             } else {
